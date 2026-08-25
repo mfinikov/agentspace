@@ -25,7 +25,7 @@ export const DEFAULT_CONFIG: Config = {
   backend: 'auto',
   network: 'full',
   confirmOnLeave: true,
-  image: 'agentspace/base:0.2',
+  image: 'agentspace/base:0.3',
   memory: '4g',
   cpus: '2',
   forwardEnv: ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GEMINI_API_KEY'],

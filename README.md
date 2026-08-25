@@ -49,6 +49,7 @@ aspace new scratch          # name it
 aspace new --net none       # no network at all
 aspace new --keep           # survives `leave`, re-enter later
 aspace new --env OPENAI_API_KEY   # forward one host variable in
+aspace new --stack minimal        # just the rules, none of the scaffolding
 ```
 
 Once inside, every command runs in the space. When you are done:
@@ -166,7 +167,7 @@ aspace config set forwardEnv ANTHROPIC_API_KEY,GITHUB_TOKEN
 | `backend` | `auto` | `auto`, `docker` or `native` |
 | `network` | `full` | default `--net` for new spaces |
 | `confirmOnLeave` | `true` | ask before deleting when a shell ends without `aspace leave` |
-| `image` | `agentspace/base:0.2` | container image |
+| `image` | `agentspace/base:0.3` | container image |
 | `memory` / `cpus` | `4g` / `2` | resource limits |
 | `forwardEnv` | API key names | host variables every space may see |
 

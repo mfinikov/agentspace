@@ -42,6 +42,14 @@ ENV NPM_CONFIG_PREFIX=/home/agent/.local \
 RUN npm install -g @anthropic-ai/claude-code \
       || echo "agentspace: skipped claude-code install (offline build)"
 
+# A space starts with no git identity, so the scaffold's first commit fails
+# with an unhelpful error. Give it one; work that leaves the space is committed
+# again on the host anyway.
+RUN git config --global user.name "agentspace" \
+ && git config --global user.email "agent@agentspace.local" \
+ && git config --global init.defaultBranch main \
+ && git config --global --add safe.directory /workspace
+
 ENV AGENTSPACE=1 \
     AGENTSPACE_INSIDE=1 \
     HOME=/home/agent

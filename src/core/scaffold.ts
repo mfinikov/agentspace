@@ -60,6 +60,9 @@ function linkClaudeDir(workspace: string): void {
   for (const [name, target] of links) {
     const link = path.join(claude, name)
     if (fs.existsSync(link) || fs.lstatSync(link, { throwIfNoEntry: false })) continue
+    // A stack need not ship every category; a link to nothing is worse than
+    // no link, because tools report it as a broken path.
+    if (!fs.existsSync(path.resolve(claude, target))) continue
     try {
       fs.symlinkSync(target, link, 'dir')
     } catch {

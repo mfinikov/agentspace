@@ -33,9 +33,17 @@ export function runInherit(cmd: string, args: string[], opts: { cwd?: string; en
 }
 
 /** Attach an interactive session; resolves with the exit code when it ends. */
-export function attach(cmd: string, args: string[], env?: NodeJS.ProcessEnv): Promise<number> {
+export function attach(
+  cmd: string,
+  args: string[],
+  opts: { env?: NodeJS.ProcessEnv; cwd?: string } = {},
+): Promise<number> {
   return new Promise((resolve) => {
-    const child = spawn(cmd, args, { stdio: 'inherit', env: env ?? process.env })
+    const child = spawn(cmd, args, {
+      stdio: 'inherit',
+      env: opts.env ?? process.env,
+      cwd: opts.cwd,
+    })
     // While attached, the child owns the terminal: don't let Ctrl-C kill the CLI.
     const onSigint = () => {}
     process.on('SIGINT', onSigint)

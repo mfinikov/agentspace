@@ -9,10 +9,10 @@ import { attach as attachProc, which } from '../core/proc.js'
  * macOS-only fallback that uses the Seatbelt sandbox (`sandbox-exec`).
  *
  * It is weaker than the container backend — the process still runs on the host
- * kernel with the host's binaries — but it confines filesystem writes to the
- * workspace and blocks reads of the user's home directory, which covers the
- * main risk: an agent wandering outside its folder. Use it when Docker is not
- * available; `aspace doctor` says so out loud.
+ * kernel, with the host's binaries and the host's installed packages — but it
+ * confines every write to the workspace and blocks all reads of the user's
+ * home directory, which covers the main risk: an agent wandering out of its
+ * folder. Use it when Docker is not available; `aspace doctor` says so out loud.
  */
 export class NativeBackend implements Backend {
   readonly name = 'native' as const
@@ -33,44 +33,50 @@ export class NativeBackend implements Backend {
     return path.join(control, 'sandbox.sb')
   }
 
+  /**
+   * Allow-by-default with targeted denies. A deny-by-default profile cannot
+   * even load dyld without enumerating half the filesystem, and an incomplete
+   * enumeration aborts the process rather than degrading — so the rules that
+   * matter are expressed as denies, and later rules win.
+   */
   private writeProfile(opts: { workspace: string; control: string; network: 'none' | 'full' }): string {
-    const allowRead = [
-      '/usr', '/bin', '/sbin', '/opt', '/System', '/Library', '/private/var/db',
-      '/private/etc', '/dev', '/tmp', '/private/tmp', '/var',
-    ]
+    const homeDir = os.homedir()
     const profile = `(version 1)
-(deny default)
-(allow process-exec process-fork signal)
-(allow sysctl-read mach-lookup ipc-posix-shm)
-(allow file-read-metadata)
+(allow default)
 
-; Read-only access to the system so ordinary tooling still runs.
-${allowRead.map((p) => `(allow file-read* (subpath "${p}"))`).join('\n')}
-
-; The workspace is the only writable place — this is the whole point.
-(allow file-read* file-write* (subpath "${opts.workspace}"))
-(allow file-read* file-write* (subpath "${opts.control}"))
+; Writes: the workspace, and scratch space that dies with the machine.
+(deny file-write*)
+(allow file-write* (subpath ${sexp(opts.workspace)}))
+(allow file-write* (subpath ${sexp(opts.control)}))
 (allow file-write* (subpath "/private/tmp"))
 (allow file-write* (subpath "/private/var/folders"))
+(allow file-write*
+  (literal "/dev/null") (literal "/dev/zero") (literal "/dev/tty")
+  (literal "/dev/stdout") (literal "/dev/stderr") (literal "/dev/dtracehelper"))
+(allow file-write* (regex #"^/dev/ttys[0-9]*$"))
 
-; Never let the sandbox read the user's files outside the workspace.
-(deny file-read* (subpath "${os.homedir()}"))
-(allow file-read* (subpath "${opts.workspace}"))
+; Reads: the user's files are off limits. The workspace re-allow must come
+; last, because the space directory may itself live under the home directory.
+(deny file-read* (subpath ${sexp(homeDir)}))
+(allow file-read* (subpath ${sexp(opts.workspace)}))
+(allow file-read* (subpath ${sexp(opts.control)}))
 
-${opts.network === 'full' ? '(allow network*)' : '(deny network*)'}
+${opts.network === 'full' ? '; network: allowed (inherited from allow default)' : '(deny network*)'}
 `
     const file = this.profilePath(opts.control)
+    fs.mkdirSync(opts.control, { recursive: true })
     fs.writeFileSync(file, profile)
     return file
   }
 
   async create(opts: CreateOptions): Promise<string> {
     this.writeProfile(opts)
+    fs.mkdirSync(path.join(opts.workspace, '.home'), { recursive: true })
     return `native:${opts.name}`
   }
 
   isRunning(): boolean {
-    // Native spaces have no daemon: the sandbox lives only while a shell is attached.
+    // Native spaces have no daemon: the sandbox exists only while a shell runs.
     return true
   }
 
@@ -80,29 +86,83 @@ ${opts.network === 'full' ? '(allow network*)' : '(deny network*)'}
       AGENTSPACE: '1',
       AGENTSPACE_INSIDE: '1',
       AGENTSPACE_NAME: space.name,
+      // A home inside the workspace keeps tool config from leaking either way.
       HOME: path.join(workspace, '.home'),
       PS1: `aspace:${space.name} \\W $ `,
     }
   }
 
-  async attach(space: SpaceManifest, o: { workspace: string; control: string }): Promise<number> {
+  /** Regenerate the profile so a moved space or changed home still applies. */
+  private ensureProfile(space: SpaceManifest, o: { workspace: string; control: string }): string {
+    this.writeProfile({ workspace: o.workspace, control: o.control, network: space.network })
     fs.mkdirSync(path.join(o.workspace, '.home'), { recursive: true })
-    return attachProc(
-      'sandbox-exec',
-      ['-f', this.profilePath(o.control), '/bin/bash', '--noprofile', '--norc', '-i'],
-      { ...this.env(space, o.workspace), PWD: o.workspace },
-    )
+    return this.profilePath(o.control)
+  }
+
+  async attach(space: SpaceManifest, o: { workspace: string; control: string }): Promise<number> {
+    const profile = this.ensureProfile(space, o)
+    fs.mkdirSync(path.join(o.workspace, '.home'), { recursive: true })
+    const rc = this.writeRc(space, o.workspace)
+    return attachProc('sandbox-exec', ['-f', profile, '/bin/bash', '--rcfile', rc, '-i'], {
+      env: this.env(space, o.workspace),
+      cwd: o.workspace,
+    })
   }
 
   async exec(space: SpaceManifest, argv: string[], o: { workspace: string; control: string }): Promise<number> {
-    return attachProc(
-      'sandbox-exec',
-      ['-f', this.profilePath(o.control), '/bin/bash', '-c', `cd ${JSON.stringify(o.workspace)} && ${argv.join(' ')}`],
-      this.env(space, o.workspace),
-    )
+    const profile = this.ensureProfile(space, o)
+    return attachProc('sandbox-exec', ['-f', profile, '/bin/bash', '-lc', argv.join(' ')], {
+      env: this.env(space, o.workspace),
+      cwd: o.workspace,
+    })
   }
 
   async destroy(): Promise<void> {
-    // The sandbox has no residue beyond the space directory, which the caller removes.
+    // The sandbox leaves nothing behind beyond the space directory, which the
+    // caller removes.
   }
+
+  /** `aspace leave` must be able to end the shell, so it is a shell function. */
+  private writeRc(space: SpaceManifest, workspace: string): string {
+    const rc = path.join(workspace, '.home', '.bashrc')
+    const control = path.join(path.dirname(workspace), 'control')
+    fs.writeFileSync(
+      rc,
+      `# generated by agentspace — this file is inside the space
+export PS1='\\[\\033[36m\\]aspace:${space.name}\\[\\033[0m\\] \\W $ '
+export EDITOR=\${EDITOR:-nano}
+alias ll='ls -alh'
+
+aspace() {
+  case "$1" in
+    leave)
+      local mode=destroy
+      for a in "$@"; do [ "$a" = "--keep" ] && mode=keep; done
+      printf '%s\\n' "$mode" > ${JSON.stringify(path.join(control, 'leave'))}
+      exit 0
+      ;;
+    status)
+      echo "space:    ${space.name}"
+      echo "backend:  native (macOS sandbox)"
+      echo "network:  ${space.network}"
+      echo "writable: ${workspace} only"
+      echo "blocked:  your home directory is unreadable from here"
+      ;;
+    *)
+      echo "aspace: inside a space you can use: leave [--keep], status" >&2
+      return 1
+      ;;
+  esac
+}
+
+[ -f ${JSON.stringify(path.join(control, 'motd'))} ] && cat ${JSON.stringify(path.join(control, 'motd'))}
+`,
+    )
+    return rc
+  }
+}
+
+/** Quote a path for a Seatbelt profile string literal. */
+function sexp(value: string): string {
+  return JSON.stringify(value)
 }

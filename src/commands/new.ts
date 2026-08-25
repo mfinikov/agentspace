@@ -1,0 +1,121 @@
+import fs from 'node:fs'
+import pc from 'picocolors'
+import { resolveBackend } from '../backends/index.js'
+import { loadConfig, type NetworkMode } from '../core/config.js'
+import { assertValidName, generateName, slugify } from '../core/ids.js'
+import { log, UserError } from '../core/log.js'
+import { controlDir } from '../core/control.js'
+import { createSpaceDirs, spaceExists, writeManifest, type SpaceManifest } from '../core/state.js'
+import { scaffold } from '../core/scaffold.js'
+import { runSession, summary } from '../core/session.js'
+import { workspaceDir } from '../core/paths.js'
+import type { Args } from '../cli-args.js'
+
+export async function cmdNew(args: Args): Promise<number> {
+  const cfg = loadConfig()
+
+  const raw = args.positional[0]
+  const name = raw ? slugify(raw) : generateName()
+  assertValidName(name)
+  if (spaceExists(name)) {
+    throw new UserError(
+      `a space called "${name}" already exists`,
+      `enter it with \`aspace enter ${name}\`, or destroy it with \`aspace rm ${name}\``,
+    )
+  }
+
+  const network = (args.string('net') ?? cfg.network) as NetworkMode
+  if (network !== 'none' && network !== 'full') {
+    throw new UserError(`--net must be "none" or "full", got "${network}"`)
+  }
+
+  const preference = (args.string('backend') ?? cfg.backend) as typeof cfg.backend
+  const { backend, name: backendName } = resolveBackend(preference, (reason) => {
+    log.warn(`docker is unavailable (${reason})`)
+    log.dim('  falling back to the macOS sandbox: weaker isolation, same workspace rules')
+  })
+
+  const stack = args.string('stack') ?? 'default'
+  const ephemeral = !args.bool('keep')
+  const image = args.string('image') ?? cfg.image
+
+  log.blank()
+  log.step(`creating ${pc.bold(name)}`)
+
+  const workspace = createSpaceDirs(name)
+  const { filesWritten } = scaffold(workspace, stack, {
+    name,
+    date: new Date().toISOString().slice(0, 10),
+  })
+  log.ok(`seeded the ${stack} agent stack (${filesWritten} files)`)
+
+  await backend.prepare(image, { rebuild: args.bool('rebuild') })
+
+  const control = controlDir(name)
+  fs.mkdirSync(control, { recursive: true })
+
+  const env = collectEnv(args, cfg.forwardEnv, name)
+
+  const space: SpaceManifest = {
+    version: 1,
+    name,
+    backend: backendName,
+    network,
+    image: backendName === 'docker' ? image : undefined,
+    createdAt: new Date().toISOString(),
+    stack,
+    ephemeral,
+  }
+
+  try {
+    space.handle = await backend.create({
+      name,
+      workspace,
+      control,
+      network,
+      image,
+      memory: args.string('memory') ?? cfg.memory,
+      cpus: args.string('cpus') ?? cfg.cpus,
+      env,
+    })
+  } catch (err) {
+    fs.rmSync(workspaceDir(name), { recursive: true, force: true })
+    throw err
+  }
+
+  writeManifest(space)
+  log.ok(`environment up`)
+  log.blank()
+  log.info(summary(space))
+
+  const forwarded = Object.keys(env).filter((k) => !k.startsWith('AGENTSPACE'))
+  if (forwarded.length) log.dim(`${pc.bold('env')}       forwarded: ${forwarded.join(', ')}`)
+
+  if (args.bool('no-attach')) {
+    log.blank()
+    log.dim(`enter it with: aspace enter ${name}`)
+    return 0
+  }
+
+  return runSession(space, backend)
+}
+
+/** Host env vars the space is allowed to see — nothing is forwarded by default. */
+function collectEnv(args: Args, configured: string[], name: string): Record<string, string> {
+  const env: Record<string, string> = {
+    AGENTSPACE: '1',
+    AGENTSPACE_INSIDE: '1',
+    AGENTSPACE_NAME: name,
+  }
+  const requested = [...configured, ...args.all('env')]
+  for (const item of requested) {
+    if (item.includes('=')) {
+      const idx = item.indexOf('=')
+      env[item.slice(0, idx)] = item.slice(idx + 1)
+      continue
+    }
+    const value = process.env[item]
+    if (value !== undefined) env[item] = value
+  }
+  return env
+}

@@ -1,0 +1,12 @@
+# agentspace interactive shell
+[ -f /etc/profile.d/agentspace.sh ] && . /etc/profile.d/agentspace.sh
+
+export HISTFILE=/home/agent/.bash_history
+export EDITOR=nano
+alias ll='ls -alh'
+alias la='ls -A'
+
+if [ -f /run/agentspace/motd ] && [ -z "$AGENTSPACE_MOTD_SHOWN" ]; then
+  export AGENTSPACE_MOTD_SHOWN=1
+  cat /run/agentspace/motd
+fi

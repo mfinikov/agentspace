@@ -1,0 +1,50 @@
+#!/bin/sh
+# In-space `aspace` helper. `leave` is additionally shadowed by a shell function
+# (see /etc/profile.d/agentspace.sh) so it can exit the interactive shell.
+set -e
+
+CONTROL=/run/agentspace
+NAME="$(cat "$CONTROL/name" 2>/dev/null || echo unknown)"
+
+usage() {
+  cat <<'USAGE'
+aspace — you are inside an agentspace
+
+  aspace leave         destroy this space and return to your machine
+  aspace leave --keep  detach, keep the space on disk for `aspace enter`
+  aspace status        show this space's isolation settings
+  aspace tree          show the workspace layout
+  aspace help          this message
+
+Everything under /workspace is shared with your machine. Everything else in
+here is thrown away when the space is destroyed.
+USAGE
+}
+
+case "${1:-help}" in
+  leave)
+    mode=destroy
+    for arg in "$@"; do
+      [ "$arg" = "--keep" ] && mode=keep
+    done
+    printf '%s\n' "$mode" > "$CONTROL/leave"
+    echo "agentspace: requested leave ($mode). Run 'exit' to return to your machine."
+    ;;
+  status)
+    echo "space:    $NAME"
+    echo "network:  $(cat "$CONTROL/network" 2>/dev/null || echo unknown)"
+    echo "backend:  $(cat "$CONTROL/backend" 2>/dev/null || echo unknown)"
+    echo "mounted:  /workspace (shared with host)"
+    echo "isolated: everything outside /workspace"
+    ;;
+  tree)
+    if command -v tree >/dev/null 2>&1; then tree -L 2 -a -I '.git|node_modules' /workspace
+    else find /workspace -maxdepth 2 -not -path '*/.git/*' -not -path '*/node_modules/*' | sort; fi
+    ;;
+  help|--help|-h) usage ;;
+  *)
+    echo "aspace: unknown command '$1'" >&2
+    usage >&2
+    exit 1
+    ;;
+esac

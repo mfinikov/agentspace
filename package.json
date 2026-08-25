@@ -1,0 +1,29 @@
+{
+  "name": "agentspace",
+  "version": "0.1.0",
+  "description": "Ephemeral, sandboxed workspaces for AI agents. One folder in, nothing out.",
+  "keywords": ["agent", "sandbox", "container", "cli", "ephemeral", "workspace", "ai", "claude"],
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "aspace": "./dist/cli.js",
+    "agentspace": "./dist/cli.js"
+  },
+  "files": ["dist", "templates", "docker", "README.md", "LICENSE"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/*.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,42 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: build the base image
+        run: docker build -t agentspace/base:ci -f docker/Dockerfile docker
+      - name: the space must not be able to escalate or see a host mount
+        run: |
+          docker run --rm --security-opt no-new-privileges --cap-drop ALL \
+            agentspace/base:ci bash -lc '
+              set -e
+              test "$(whoami)" = agent
+              command -v aspace
+              test ! -d /Users
+              sudo -n true && { echo "escalation succeeded"; exit 1; } || true
+              echo ok
+            '

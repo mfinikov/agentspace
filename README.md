@@ -166,7 +166,7 @@ aspace config set forwardEnv ANTHROPIC_API_KEY,GITHUB_TOKEN
 | `backend` | `auto` | `auto`, `docker` or `native` |
 | `network` | `full` | default `--net` for new spaces |
 | `confirmOnLeave` | `true` | ask before deleting when a shell ends without `aspace leave` |
-| `image` | `agentspace/base:0.1` | container image |
+| `image` | `agentspace/base:0.2` | container image |
 | `memory` / `cpus` | `4g` / `2` | resource limits |
 | `forwardEnv` | API key names | host variables every space may see |
 

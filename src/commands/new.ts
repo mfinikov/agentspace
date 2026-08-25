@@ -4,10 +4,10 @@ import { resolveBackend } from '../backends/index.js'
 import { loadConfig, type NetworkMode } from '../core/config.js'
 import { assertValidName, generateName, slugify } from '../core/ids.js'
 import { log, UserError } from '../core/log.js'
-import { controlDir } from '../core/control.js'
+import { writeControl } from '../core/control.js'
 import { createSpaceDirs, spaceExists, writeManifest, type SpaceManifest } from '../core/state.js'
 import { scaffold } from '../core/scaffold.js'
-import { runSession, summary } from '../core/session.js'
+import { motd, runSession, summary } from '../core/session.js'
 import { workspaceDir } from '../core/paths.js'
 import type { Args } from '../cli-args.js'
 
@@ -51,9 +51,6 @@ export async function cmdNew(args: Args): Promise<number> {
 
   await backend.prepare(image, { rebuild: args.bool('rebuild') })
 
-  const control = controlDir(name)
-  fs.mkdirSync(control, { recursive: true })
-
   const env = collectEnv(args, cfg.forwardEnv, name)
 
   const space: SpaceManifest = {
@@ -66,6 +63,10 @@ export async function cmdNew(args: Args): Promise<number> {
     stack,
     ephemeral,
   }
+
+  // The in-space `aspace` shim reads these, so they must exist before the
+  // environment starts — `--no-attach` spaces never reach runSession.
+  const control = writeControl(space, motd(space))
 
   try {
     space.handle = await backend.create({

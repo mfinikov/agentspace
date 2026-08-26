@@ -21,12 +21,12 @@ survives. Everything else is thrown away when the space is destroyed.
 
 ```
 bash scripts/check.sh    lint + typecheck + test — the gate before "done"
-aspace status            this space's isolation settings
-aspace leave             destroy the space and return to the host
+abox status            this space's isolation settings
+abox leave             destroy the space and return to the host
 ```
 
-Committing is not saving: `aspace leave` deletes the git history with
-everything else. Push to a remote, or use `aspace leave --keep`.
+Committing is not saving: `abox leave` deletes the git history with
+everything else. Push to a remote, or use `abox leave --keep`.
 
 Add skills under `.agents/skills/<name>/SKILL.md` when you have done the same
 procedure twice. For the full phase-based stack, create a space without

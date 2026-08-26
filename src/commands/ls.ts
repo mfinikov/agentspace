@@ -29,7 +29,7 @@ export async function cmdLs(args: Args): Promise<number> {
 
   if (!spaces.length) {
     log.info('no spaces yet')
-    log.dim('  create one: aspace new')
+    log.dim('  create one: abox new')
     return 0
   }
 
@@ -57,7 +57,7 @@ export async function cmdLs(args: Args): Promise<number> {
   }
   if (current) {
     log.blank()
-    log.dim('* current — `aspace leave` acts on this one')
+    log.dim('* current — `abox leave` acts on this one')
   }
   return 0
 }

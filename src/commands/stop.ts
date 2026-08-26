@@ -24,7 +24,7 @@ export async function cmdStop(args: Args): Promise<number> {
       reclaimBuilders()
       return 0
     }
-    throw new UserError('nothing to stop', 'usage: aspace stop [name...] | aspace stop --all')
+    throw new UserError('nothing to stop', 'usage: abox stop [name...] | abox stop --all')
   }
 
   let stopped = 0

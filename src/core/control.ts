@@ -5,7 +5,7 @@ import { spaceDir } from './paths.js'
 
 export const controlDir = (name: string) => path.join(spaceDir(name), 'control')
 
-/** Files the in-space `aspace` shim reads and writes, outside the workspace. */
+/** Files the in-space `abox` shim reads and writes, outside the workspace. */
 export function writeControl(space: SpaceManifest, motd: string): string {
   const dir = controlDir(space.name)
   fs.mkdirSync(dir, { recursive: true })
@@ -19,7 +19,7 @@ export function writeControl(space: SpaceManifest, motd: string): string {
 
 export type LeaveRequest = 'destroy' | 'keep' | null
 
-/** What the user asked for with `aspace leave` from inside the space. */
+/** What the user asked for with `abox leave` from inside the space. */
 export function readLeaveRequest(name: string): LeaveRequest {
   try {
     const raw = fs.readFileSync(path.join(controlDir(name), 'leave'), 'utf8').trim()

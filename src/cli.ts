@@ -35,12 +35,12 @@ function help(): void {
   const b = pc.bold
   const d = pc.dim
   console.log(`
-${b('agentspace')} ${d(`v${VERSION}`)} — a disposable machine for your agents
+${b('agentsandbox')} ${d(`v${VERSION}`)} — a disposable machine for your agents
 
   One folder goes in. Nothing comes out. Everything is gone when you leave.
 
 ${b('USAGE')}
-  aspace <command> [options]
+  abox <command> [options]
 
 ${b('COMMANDS')}
   ${b('new')} [name]           create a space and drop into it
@@ -67,16 +67,16 @@ ${b('NEW OPTIONS')}
   --rebuild              rebuild the base image first
 
 ${b('INSIDE A SPACE')}
-  aspace leave           destroy it and return
-  aspace leave --keep    detach, keep it for \`aspace enter\`
-  aspace status          what is isolated and what is shared
+  abox leave           destroy it and return
+  abox leave --keep    detach, keep it for \`abox enter\`
+  abox status          what is isolated and what is shared
 
 ${b('WHAT IS ISOLATED')}
   ${pc.green('shared')}    /workspace  ${d('<->')}  ~/.agentspace/spaces/<name>/workspace
   ${pc.red('blocked')}   your home directory, your keys, your other projects,
             anything listening on your machine's localhost
 
-${d('  https://github.com/mfinikov/agentspace')}
+${d('  https://github.com/mfinikov/agentsandbox')}
 `)
 }
 
@@ -97,7 +97,7 @@ async function main(): Promise<number> {
   if (!handler) {
     log.error(`unknown command "${first}"`)
     log.dim(`  known commands: ${Object.keys(COMMANDS).join(', ')}`)
-    log.dim('  run `aspace help` for usage')
+    log.dim('  run `abox help` for usage')
     return 1
   }
 

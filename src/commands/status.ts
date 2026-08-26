@@ -10,12 +10,12 @@ export async function cmdStatus(args: Args): Promise<number> {
   const target = args.positional[0] ?? getCurrent()
   if (!target) {
     const spaces = listSpaces()
-    log.info(spaces.length ? `no current space (${spaces.length} exist — see \`aspace ls\`)` : 'no spaces yet')
+    log.info(spaces.length ? `no current space (${spaces.length} exist — see \`abox ls\`)` : 'no spaces yet')
     return 0
   }
 
   const space = readManifest(target)
-  if (!space) throw new UserError(`space "${target}" not found`, 'see `aspace ls`')
+  if (!space) throw new UserError(`space "${target}" not found`, 'see `abox ls`')
 
   const backend = getBackend(space.backend)
   log.blank()
@@ -27,8 +27,8 @@ export async function cmdStatus(args: Args): Promise<number> {
   log.blank()
 
   if (space.ephemeral) {
-    log.dim('  this space is ephemeral — `aspace leave` deletes everything above')
-    log.dim(`  to keep it instead: aspace leave --keep`)
+    log.dim('  this space is ephemeral — `abox leave` deletes everything above')
+    log.dim(`  to keep it instead: abox leave --keep`)
   }
   return 0
 }

@@ -28,7 +28,7 @@ export interface Backend {
   isRunning(space: SpaceManifest): boolean
   /**
    * Halt the environment without destroying it, releasing its memory.
-   * `aspace enter` brings it back. Idempotent.
+   * `abox enter` brings it back. Idempotent.
    */
   stop(space: SpaceManifest): Promise<void>
   /** Stop and delete the environment (idempotent). */

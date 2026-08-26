@@ -35,11 +35,11 @@ export async function cmdConfig(args: Args): Promise<number> {
   }
 
   if (action === 'set') {
-    if (!key) throw new UserError('usage: aspace config set <key> <value>')
+    if (!key) throw new UserError('usage: abox config set <key> <value>')
     const inline = key.includes('=')
     const name = inline ? key.slice(0, key.indexOf('=')) : key
     const value = inline ? key.slice(key.indexOf('=') + 1) : rest.join(' ')
-    if (!value) throw new UserError(`usage: aspace config set ${name} <value>`)
+    if (!value) throw new UserError(`usage: abox config set ${name} <value>`)
     saveConfig(parseConfigValue(name, value))
     log.ok(`${name} = ${value}`)
     return 0
@@ -53,6 +53,6 @@ export async function cmdConfig(args: Args): Promise<number> {
 
   throw new UserError(
     `unknown config action "${action}"`,
-    'usage: aspace config [list|get <key>|set <key> <value>|reset]',
+    'usage: abox config [list|get <key>|set <key> <value>|reset]',
   )
 }

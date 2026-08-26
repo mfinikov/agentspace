@@ -1,5 +1,5 @@
 #!/bin/sh
-# In-space `aspace` helper. `leave` is additionally shadowed by a shell function
+# In-space `abox` helper. `leave` is additionally shadowed by a shell function
 # (see /etc/profile.d/agentspace.sh) so it can exit the interactive shell.
 set -e
 
@@ -8,13 +8,13 @@ NAME="$(cat "$CONTROL/name" 2>/dev/null || echo unknown)"
 
 usage() {
   cat <<'USAGE'
-aspace — you are inside an agentspace
+abox — you are inside an agentspace
 
-  aspace leave         destroy this space and return to your machine
-  aspace leave --keep  detach, keep the space on disk for `aspace enter`
-  aspace status        show this space's isolation settings
-  aspace tree          show the workspace layout
-  aspace help          this message
+  abox leave         destroy this space and return to your machine
+  abox leave --keep  detach, keep the space on disk for `abox enter`
+  abox status        show this space's isolation settings
+  abox tree          show the workspace layout
+  abox help          this message
 
 Everything under /workspace is shared with your machine. Everything else in
 here is thrown away when the space is destroyed.
@@ -47,7 +47,7 @@ case "${1:-help}" in
     ;;
   help|--help|-h) usage ;;
   *)
-    echo "aspace: unknown command '$1'" >&2
+    echo "abox: unknown command '$1'" >&2
     usage >&2
     exit 1
     ;;

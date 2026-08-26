@@ -21,7 +21,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "aspace": "dist/cli.js",
+    "abox": "dist/cli.js",
     "agentsandbox": "dist/cli.js"
   },
   "files": [
@@ -49,13 +49,13 @@
     "tsup": "^8.3.5",
     "typescript": "^5.7.2"
   },
-  "homepage": "https://github.com/mfinikov/agentspace#readme",
+  "homepage": "https://github.com/mfinikov/agentsandbox#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mfinikov/agentspace.git"
+    "url": "git+https://github.com/mfinikov/agentsandbox.git"
   },
   "bugs": {
-    "url": "https://github.com/mfinikov/agentspace/issues"
+    "url": "https://github.com/mfinikov/agentsandbox/issues"
   },
   "author": "mfinikov",
   "os": [

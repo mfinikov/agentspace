@@ -6,7 +6,7 @@ export EDITOR=nano
 alias ll='ls -alh'
 alias la='ls -A'
 
-# Only greet a human at an interactive prompt — never an `aspace exec`.
+# Only greet a human at an interactive prompt — never an `abox exec`.
 case "$-" in
   *i*)
     if [ -f /run/agentspace/motd ] && [ -z "$AGENTSPACE_MOTD_SHOWN" ]; then

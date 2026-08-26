@@ -9,7 +9,7 @@ export interface Config {
   backend: BackendName | 'auto'
   /** Default network policy for new spaces. */
   network: NetworkMode
-  /** Ask before destroying a space on `aspace leave`. */
+  /** Ask before destroying a space on `abox leave`. */
   confirmOnLeave: boolean
   /** Container image used by the docker backend. */
   image: string
@@ -29,7 +29,7 @@ export const DEFAULT_CONFIG: Config = {
   backend: 'auto',
   network: 'full',
   confirmOnLeave: true,
-  image: 'agentspace/base:0.4',
+  image: 'agentspace/base:0.5',
   memory: '2g',
   cpus: '2',
   forwardEnv: ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GEMINI_API_KEY'],
@@ -61,7 +61,7 @@ export function configKeys(): (keyof Config)[] {
   return Object.keys(DEFAULT_CONFIG) as (keyof Config)[]
 }
 
-/** Parse a `key=value` pair from `aspace config set` into a typed patch. */
+/** Parse a `key=value` pair from `abox config set` into a typed patch. */
 export function parseConfigValue(key: string, value: string): Partial<Config> {
   switch (key) {
     case 'backend':

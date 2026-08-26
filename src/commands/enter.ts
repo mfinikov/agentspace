@@ -17,7 +17,7 @@ function resolveTarget(args: Args): string {
     spaces.length ? 'which space?' : 'there are no spaces yet',
     spaces.length
       ? `pick one: ${spaces.map((s) => s.name).join(', ')}`
-      : 'create one with `aspace new`',
+      : 'create one with `abox new`',
   )
 }
 
@@ -37,7 +37,7 @@ function forwardedEnv(name: string, keys: string[]): Record<string, string> {
 export async function cmdEnter(args: Args): Promise<number> {
   const target = resolveTarget(args)
   const space = readManifest(target)
-  if (!space) throw new UserError(`space "${target}" not found`, 'see `aspace ls`')
+  if (!space) throw new UserError(`space "${target}" not found`, 'see `abox ls`')
 
   const backend = getBackend(space.backend)
   const reason = backend.unavailableReason()
@@ -66,18 +66,18 @@ export async function cmdEnter(args: Args): Promise<number> {
 export async function cmdExec(args: Args): Promise<number> {
   const target = args.string('space') ?? getCurrent() ?? resolveTarget(args)
   const space = readManifest(target)
-  if (!space) throw new UserError(`space "${target}" not found`, 'see `aspace ls`')
+  if (!space) throw new UserError(`space "${target}" not found`, 'see `abox ls`')
 
   const argv = args.passthrough.length ? args.passthrough : args.positional
   if (!argv.length) {
-    throw new UserError('nothing to run', 'usage: aspace exec [--space <name>] -- <command>')
+    throw new UserError('nothing to run', 'usage: abox exec [--space <name>] -- <command>')
   }
 
   const backend = getBackend(space.backend)
   if (!backend.isRunning(space)) {
     throw new UserError(
       `${space.name} is not running`,
-      `start it with \`aspace enter ${space.name}\``,
+      `start it with \`abox enter ${space.name}\``,
     )
   }
   return backend.exec(space, argv, {

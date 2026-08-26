@@ -1,22 +1,45 @@
 {
   "name": "agentspace",
   "version": "0.1.0",
-  "description": "Ephemeral, sandboxed workspaces for AI agents. One folder in, nothing out.",
-  "keywords": ["agent", "sandbox", "container", "cli", "ephemeral", "workspace", "ai", "claude"],
+  "description": "Ephemeral, sandboxed workspaces for AI agents. One folder in, nothing out, everything gone when you leave.",
+  "keywords": [
+    "agent",
+    "agents",
+    "ai",
+    "sandbox",
+    "container",
+    "isolation",
+    "ephemeral",
+    "workspace",
+    "cli",
+    "claude",
+    "claude-code",
+    "codex",
+    "devcontainer",
+    "security"
+  ],
   "license": "MIT",
   "type": "module",
   "bin": {
     "aspace": "./dist/cli.js",
     "agentspace": "./dist/cli.js"
   },
-  "files": ["dist", "templates", "docker", "README.md", "LICENSE"],
-  "engines": { "node": ">=20" },
+  "files": [
+    "dist",
+    "templates",
+    "docker",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && node --test test/*.test.js",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run typecheck && npm run build && node --test test/*.test.js"
   },
   "dependencies": {
     "picocolors": "^1.1.1"
@@ -25,5 +48,21 @@
     "@types/node": "^22.10.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2"
+  },
+  "homepage": "https://github.com/mfinikov/agentspace#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mfinikov/agentspace.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mfinikov/agentspace/issues"
+  },
+  "author": "mfinikov",
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "publishConfig": {
+    "access": "public"
   }
 }

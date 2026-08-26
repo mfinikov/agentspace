@@ -26,13 +26,22 @@ export function stackDir(stack: string): string {
   return dir
 }
 
+/**
+ * npm refuses to publish a file named `.gitignore`, so templates ship it as
+ * `gitignore` and it is restored on the way out. Without this, every space
+ * created from an installed copy would have no gitignore at all.
+ */
+function destName(name: string): string {
+  return name === 'gitignore' ? '.gitignore' : name
+}
+
 /** Copy a template tree without clobbering anything the user already has. */
 function copyTree(from: string, to: string): number {
   let written = 0
   fs.mkdirSync(to, { recursive: true })
   for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
     const src = path.join(from, entry.name)
-    const dest = path.join(to, entry.name)
+    const dest = path.join(to, destName(entry.name))
     if (entry.isDirectory()) {
       written += copyTree(src, dest)
     } else if (entry.isFile()) {

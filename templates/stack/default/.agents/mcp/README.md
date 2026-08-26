@@ -9,5 +9,5 @@ Two rules that matter inside an agentspace:
    filesystem, the network, or a remote API extends the agent's reach past this
    container. Add one deliberately, and only for the tools the task needs.
 2. **Secrets come in as environment variables**, never in the JSON. Forward
-   them from the host with `abox new --env KEY`, and never commit
+   them from the host with `apen new --env KEY`, and never commit
    `servers.json` if it ends up containing one.

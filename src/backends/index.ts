@@ -39,7 +39,7 @@ export function resolveBackend(
     if (reason) {
       throw new UserError(
         `the "${preference}" backend cannot run here: ${reason}`,
-        'run `abox doctor` to see what is available',
+        'run `apen doctor` to see what is available',
       )
     }
     return { backend, name: preference }

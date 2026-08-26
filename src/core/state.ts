@@ -20,11 +20,11 @@ export interface SpaceManifest {
   /** Container id / pid handle owned by the backend. */
   handle?: string
   createdAt: string
-  /** ISO timestamp of the last `abox enter`/`new` attach. */
+  /** ISO timestamp of the last `apen enter`/`new` attach. */
   lastEnteredAt?: string
   /** Template pack that seeded the workspace. */
   stack: string
-  /** When false, `abox leave` keeps the workspace on disk. */
+  /** When false, `apen leave` keeps the workspace on disk. */
   ephemeral: boolean
 }
 
@@ -80,7 +80,7 @@ export function removeSpaceDir(name: string): void {
   fs.rmSync(spaceDir(name), { recursive: true, force: true })
 }
 
-/** The space the user most recently attached to — used by bare `abox leave`. */
+/** The space the user most recently attached to — used by bare `apen leave`. */
 export function setCurrent(name: string | null): void {
   ensureHome()
   if (name === null) {

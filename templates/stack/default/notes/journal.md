@@ -15,5 +15,5 @@ procedures into `.agents/skills/`.
 **Outcome:** —
 **Surprised me:** —
 **Cost me time:** —
-**Reusable:** `/workspace` is the only thing that survives `abox leave`.
+**Reusable:** `/workspace` is the only thing that survives `apen leave`.
 **Next:** frame the first task.

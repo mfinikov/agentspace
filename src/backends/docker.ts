@@ -15,6 +15,7 @@ function dockerBin(): string {
 
 export class DockerBackend implements Backend {
   readonly name = 'docker' as const
+  readonly persistent = true
 
   unavailableReason(): string | null {
     if (!which(dockerBin())) return 'the `docker` command was not found on your PATH'

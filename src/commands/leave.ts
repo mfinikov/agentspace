@@ -6,7 +6,7 @@ import { getCurrent, readManifest } from '../core/state.js'
 import type { Args } from '../cli-args.js'
 
 export async function cmdLeave(args: Args): Promise<number> {
-  // Inside a space, `abox leave` is handled by the shell function in the
+  // Inside a space, `apen leave` is handled by the shell function in the
   // image. Reaching the host binary from inside means the shim is missing.
   if (process.env.AGENTSPACE_INSIDE === '1') {
     log.warn('this looks like the host CLI running inside a space')
@@ -18,12 +18,12 @@ export async function cmdLeave(args: Args): Promise<number> {
   if (!target) {
     throw new UserError(
       'no space to leave',
-      'you are not in a space. `abox ls` shows what exists.',
+      'you are not in a space. `apen ls` shows what exists.',
     )
   }
 
   const space = readManifest(target)
-  if (!space) throw new UserError(`space "${target}" not found`, 'see `abox ls`')
+  if (!space) throw new UserError(`space "${target}" not found`, 'see `apen ls`')
 
   const backend = getBackend(space.backend)
 
@@ -38,7 +38,7 @@ export async function cmdLeave(args: Args): Promise<number> {
 
 export async function cmdRm(args: Args): Promise<number> {
   const targets = args.positional.length ? args.positional : [getCurrent()].filter(Boolean) as string[]
-  if (!targets.length) throw new UserError('nothing to remove', 'usage: abox rm <space>')
+  if (!targets.length) throw new UserError('nothing to remove', 'usage: apen rm <space>')
 
   for (const target of targets) {
     const space = readManifest(target)

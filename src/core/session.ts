@@ -44,7 +44,7 @@ export function motd(space: SpaceManifest): string {
     pc.dim(`  ${space.backend} · ${net} · ${life}`),
     '',
     pc.dim('  /workspace is shared with your machine. Nothing else here is.'),
-    pc.dim('  read AGENTS.md first · abox status · abox leave'),
+    pc.dim('  read AGENTS.md first · apen status · apen leave'),
     '',
   ].join('\n')
 }
@@ -62,7 +62,7 @@ export function summary(space: SpaceManifest): string {
 
 /**
  * Attach an interactive shell, then honour whatever the user asked for on the
- * way out: an explicit `abox leave`, or a bare `exit` we have to interpret.
+ * way out: an explicit `apen leave`, or a bare `exit` we have to interpret.
  */
 export async function runSession(space: SpaceManifest, backend: Backend): Promise<number> {
   const control = writeControl(space, motd(space))
@@ -84,7 +84,7 @@ export async function runSession(space: SpaceManifest, backend: Backend): Promis
     return code
   }
 
-  // The shell ended without `abox leave` — Ctrl-D, `exit`, or a crash.
+  // The shell ended without `apen leave` — Ctrl-D, `exit`, or a crash.
   if (!space.ephemeral) {
     await detach(space, backend)
     return code
@@ -93,7 +93,7 @@ export async function runSession(space: SpaceManifest, backend: Backend): Promis
   const cfg = loadConfig()
   const size = formatBytes(dirSize(workspace))
   log.blank()
-  log.info(`the shell ended without ${pc.cyan('abox leave')}.`)
+  log.info(`the shell ended without ${pc.cyan('apen leave')}.`)
   const destroy = cfg.confirmOnLeave
     ? await confirm(`destroy ${pc.bold(space.name)} and its ${size} of files?`, false)
     : true
@@ -110,8 +110,8 @@ export async function detach(space: SpaceManifest, backend: Backend): Promise<vo
   log.blank()
   log.ok(`left ${pc.bold(space.name)} — files kept, environment stopped`)
   log.dim(`  files:  ${workspaceDir(space.name)}`)
-  log.dim(`  return: abox enter ${space.name}`)
-  log.dim(`  delete: abox rm ${space.name}`)
+  log.dim(`  return: apen enter ${space.name}`)
+  log.dim(`  delete: apen rm ${space.name}`)
 }
 
 export interface DestroyOptions {

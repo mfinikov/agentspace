@@ -14,6 +14,13 @@ export interface CreateOptions {
 
 export interface Backend {
   readonly name: 'apple' | 'docker' | 'native'
+  /**
+   * Whether the environment outlives a single command. Containers do — they
+   * hold memory between shells and must be started and stopped. The native
+   * sandbox does not: it exists only for the duration of one process, so
+   * "running" is not a state it can be in.
+   */
+  readonly persistent: boolean
   /** Human-readable reason this backend can't run here, or null if it can. */
   unavailableReason(): string | null
   /** Build/prepare any prerequisites (e.g. the base image). */
@@ -28,7 +35,7 @@ export interface Backend {
   isRunning(space: SpaceManifest): boolean
   /**
    * Halt the environment without destroying it, releasing its memory.
-   * `abox enter` brings it back. Idempotent.
+   * `apen enter` brings it back. Idempotent.
    */
   stop(space: SpaceManifest): Promise<void>
   /** Stop and delete the environment (idempotent). */

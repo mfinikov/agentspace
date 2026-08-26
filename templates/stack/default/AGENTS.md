@@ -72,8 +72,8 @@ upstream document — do not paper over it.
 ```
 bash scripts/bootstrap.sh   install dependencies for this space
 bash scripts/check.sh       lint + typecheck + test; the gate before "done"
-abox status               show this space's isolation settings
-abox leave                destroy the space and return to the host
+apen status               show this space's isolation settings
+apen leave                destroy the space and return to the host
 ```
 
 `scripts/check.sh` is the definition of green. If it does not cover your

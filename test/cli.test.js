@@ -12,7 +12,7 @@ const cli = path.join(root, 'dist', 'cli.js')
 let HOME
 
 /** Run the CLI against an isolated state directory. */
-function abox(args, opts = {}) {
+function apen(args, opts = {}) {
   try {
     const stdout = execFileSync(process.execPath, [cli, ...args], {
       encoding: 'utf8',
@@ -22,7 +22,7 @@ function abox(args, opts = {}) {
     return { code: 0, stdout }
   } catch (err) {
     if (opts.allowFailure) return { code: err.status ?? 1, stdout: `${err.stdout ?? ''}${err.stderr ?? ''}` }
-    throw new Error(`abox ${args.join(' ')} failed:\n${err.stdout}\n${err.stderr}`)
+    throw new Error(`apen ${args.join(' ')} failed:\n${err.stdout}\n${err.stderr}`)
   }
 }
 
@@ -39,22 +39,22 @@ after(() => {
 })
 
 test('help and version do not need any state', () => {
-  assert.match(abox(['help']).stdout, /agentspace/)
-  assert.match(abox(['--version']).stdout, /^\d+\.\d+\.\d+/)
+  assert.match(apen(['help']).stdout, /agentspace/)
+  assert.match(apen(['--version']).stdout, /^\d+\.\d+\.\d+/)
 })
 
 test('an unknown command fails with a usable message', () => {
-  const { code, stdout } = abox(['nope'], { allowFailure: true })
+  const { code, stdout } = apen(['nope'], { allowFailure: true })
   assert.equal(code, 1)
   assert.match(stdout, /unknown command/)
 })
 
 test('ls is empty before anything exists', () => {
-  assert.match(abox(['ls']).stdout, /no spaces yet/)
+  assert.match(apen(['ls']).stdout, /no spaces yet/)
 })
 
 test('new seeds the full agent stack', () => {
-  abox(['new', 'unit', '--no-start'])
+  apen(['new', 'unit', '--no-start'])
   const ws = workspace('unit')
 
   for (const file of [
@@ -112,21 +112,21 @@ test('the manifest records the isolation settings', () => {
 })
 
 test('ls and status report the new space', () => {
-  assert.match(abox(['ls']).stdout, /unit\s+down/)
-  const json = JSON.parse(abox(['ls', '--json']).stdout)
+  assert.match(apen(['ls']).stdout, /unit\s+(down|ready)/)
+  const json = JSON.parse(apen(['ls', '--json']).stdout)
   assert.equal(json.length, 1)
-  assert.match(abox(['status', 'unit']).stdout, /ephemeral/)
+  assert.match(apen(['status', 'unit']).stdout, /ephemeral/)
 })
 
 test('a duplicate name is refused rather than clobbering the workspace', () => {
-  const { code, stdout } = abox(['new', 'unit', '--no-start'], { allowFailure: true })
+  const { code, stdout } = apen(['new', 'unit', '--no-start'], { allowFailure: true })
   assert.equal(code, 1)
   assert.match(stdout, /already exists/)
   assert.ok(fs.existsSync(path.join(workspace('unit'), 'AGENTS.md')))
 })
 
 test('--net rejects a value that is not a policy', () => {
-  const { code, stdout } = abox(['new', 'bad', '--net', 'sometimes', '--no-start'], {
+  const { code, stdout } = apen(['new', 'bad', '--net', 'sometimes', '--no-start'], {
     allowFailure: true,
   })
   assert.equal(code, 1)
@@ -134,41 +134,41 @@ test('--net rejects a value that is not a policy', () => {
 })
 
 test('--keep marks the space persistent', () => {
-  abox(['new', 'kept', '--keep', '--no-start'])
+  apen(['new', 'kept', '--keep', '--no-start'])
   const manifest = JSON.parse(fs.readFileSync(path.join(spaceRoot('kept'), 'space.json'), 'utf8'))
   assert.equal(manifest.ephemeral, false)
-  assert.match(abox(['leave', 'kept']).stdout, /files kept/)
+  assert.match(apen(['leave', 'kept']).stdout, /files kept/)
   assert.ok(fs.existsSync(workspace('kept')), 'a kept space must survive leave')
 })
 
 test('config round-trips through disk', () => {
-  abox(['config', 'set', 'network', 'none'])
-  assert.equal(abox(['config', 'get', 'network']).stdout.trim(), 'none')
-  const { code, stdout } = abox(['config', 'set', 'network', 'maybe'], { allowFailure: true })
+  apen(['config', 'set', 'network', 'none'])
+  assert.equal(apen(['config', 'get', 'network']).stdout.trim(), 'none')
+  const { code, stdout } = apen(['config', 'set', 'network', 'maybe'], { allowFailure: true })
   assert.equal(code, 1)
   assert.match(stdout, /network must be/)
-  abox(['config', 'reset'])
-  assert.equal(abox(['config', 'get', 'network']).stdout.trim(), 'full')
+  apen(['config', 'reset'])
+  assert.equal(apen(['config', 'get', 'network']).stdout.trim(), 'full')
 })
 
 test('rm deletes the workspace and everything in it', () => {
   fs.writeFileSync(path.join(workspace('unit'), 'secret.txt'), 'do not survive')
-  abox(['rm', 'unit', '--force'])
+  apen(['rm', 'unit', '--force'])
   assert.equal(fs.existsSync(spaceRoot('unit')), false)
-  assert.match(abox(['status', 'unit'], { allowFailure: true }).stdout, /not found/)
+  assert.match(apen(['status', 'unit'], { allowFailure: true }).stdout, /not found/)
 })
 
 test('prune destroys ephemeral spaces and spares kept ones', () => {
-  abox(['new', 'temp-a', '--no-start'])
-  abox(['new', 'temp-b', '--no-start'])
-  abox(['prune', '--force'])
+  apen(['new', 'temp-a', '--no-start'])
+  apen(['new', 'temp-b', '--no-start'])
+  apen(['prune', '--force'])
   assert.equal(fs.existsSync(spaceRoot('temp-a')), false)
   assert.equal(fs.existsSync(spaceRoot('temp-b')), false)
   assert.ok(fs.existsSync(spaceRoot('kept')), 'prune must not touch a kept space')
 })
 
 test('backend selection rejects a runtime that does not exist', () => {
-  const { code, stdout } = abox(['config', 'set', 'backend', 'xen'], { allowFailure: true })
+  const { code, stdout } = apen(['config', 'set', 'backend', 'xen'], { allowFailure: true })
   assert.equal(code, 1)
   assert.match(stdout, /backend must be one of: auto, apple, docker, native/)
 })
@@ -176,7 +176,7 @@ test('backend selection rejects a runtime that does not exist', () => {
 test('an explicitly requested backend is never silently swapped', () => {
   // Docker is not running in CI on macOS, so asking for it must fail loudly
   // rather than quietly producing a weaker native space.
-  const { code, stdout } = abox(['new', 'pinned', '--backend', 'docker', '--no-start'], {
+  const { code, stdout } = apen(['new', 'pinned', '--backend', 'docker', '--no-start'], {
     allowFailure: true,
   })
   if (code !== 0) {
@@ -185,12 +185,12 @@ test('an explicitly requested backend is never silently swapped', () => {
   } else {
     const manifest = JSON.parse(fs.readFileSync(path.join(spaceRoot('pinned'), 'space.json'), 'utf8'))
     assert.equal(manifest.backend, 'docker')
-    abox(['rm', 'pinned', '--force'])
+    apen(['rm', 'pinned', '--force'])
   }
 })
 
 test('the minimal stack links only what it ships', () => {
-  abox(['new', 'small', '--stack', 'minimal', '--no-start'])
+  apen(['new', 'small', '--stack', 'minimal', '--no-start'])
   const claude = path.join(workspace('small'), '.claude')
   assert.ok(fs.existsSync(path.join(claude, 'skills')))
   for (const missing of ['agents', 'commands']) {
@@ -201,11 +201,11 @@ test('the minimal stack links only what it ships', () => {
     )
   }
   assert.ok(fs.existsSync(path.join(workspace('small'), 'AGENTS.md')))
-  abox(['rm', 'small', '--force'])
+  apen(['rm', 'small', '--force'])
 })
 
 test('an unknown stack is refused before anything is created', () => {
-  const { code, stdout } = abox(['new', 'nostack', '--stack', 'nope', '--no-start'], {
+  const { code, stdout } = apen(['new', 'nostack', '--stack', 'nope', '--no-start'], {
     allowFailure: true,
   })
   assert.equal(code, 1)
@@ -214,32 +214,32 @@ test('an unknown stack is refused before anything is created', () => {
 })
 
 test('a one-character name is valid', () => {
-  abox(['new', 'x', '--no-start'])
+  apen(['new', 'x', '--no-start'])
   assert.ok(fs.existsSync(path.join(workspace('x'), 'AGENTS.md')))
-  abox(['rm', 'x', '--force'])
+  apen(['rm', 'x', '--force'])
 })
 
 test('stop keeps the files and is safe to repeat', () => {
-  abox(['new', 'halted', '--keep', '--no-start'])
+  apen(['new', 'halted', '--keep', '--no-start'])
   fs.writeFileSync(path.join(workspace('halted'), 'survives.txt'), 'still here')
-  abox(['stop', 'halted'])
-  abox(['stop', 'halted'])
+  apen(['stop', 'halted'])
+  apen(['stop', 'halted'])
   assert.equal(
     fs.readFileSync(path.join(workspace('halted'), 'survives.txt'), 'utf8'),
     'still here',
   )
-  abox(['rm', 'halted', '--force'])
+  apen(['rm', 'halted', '--force'])
 })
 
 test('down succeeds when there is nothing running', () => {
-  const { code } = abox(['down'], { allowFailure: true })
+  const { code } = apen(['down'], { allowFailure: true })
   assert.equal(code, 0)
 })
 
 test('the default memory ceiling is sized for a laptop', () => {
   // A container VM commits only what the guest touches, but the ceiling is
   // what a runaway process can reach — 4g per space was too much on 16GB.
-  assert.equal(abox(['config', 'get', 'memory']).stdout.trim(), '2g')
+  assert.equal(apen(['config', 'get', 'memory']).stdout.trim(), '2g')
 })
 
 // --no-start covers the scaffolding on every platform; this keeps one test
@@ -247,16 +247,16 @@ test('the default memory ceiling is sized for a laptop', () => {
 test('a native space really starts, runs a command, and is destroyed', {
   skip: process.platform !== 'darwin' ? 'native backend is macOS-only' : false,
 }, () => {
-  abox(['new', 'live', '--backend', 'native', '--no-attach'])
-  const out = abox(['exec', '--space', 'live', '--', 'echo inside && ls AGENTS.md']).stdout
+  apen(['new', 'live', '--backend', 'native', '--no-attach'])
+  const out = apen(['exec', '--space', 'live', '--', 'echo inside && ls AGENTS.md']).stdout
   assert.match(out, /inside/)
   assert.match(out, /AGENTS\.md/)
-  abox(['rm', 'live', '--force'])
+  apen(['rm', 'live', '--force'])
   assert.equal(fs.existsSync(spaceRoot('live')), false)
 })
 
 test('doctor exits zero when a backend is available', () => {
-  const { code, stdout } = abox(['doctor'], { allowFailure: true })
+  const { code, stdout } = apen(['doctor'], { allowFailure: true })
   assert.match(stdout, /backends/)
   assert.equal(code, 0)
 })

@@ -8,12 +8,12 @@
 out. Everything is gone when you leave.
 
 > A pen for your agents: they run inside it, and nothing gets out.
-> Installs as `agentpen`; the command is `abox`.
+> Installs as `agentpen`; the command is `apen`.
 
 ```bash
-abox new      # you are now inside a fresh, isolated environment
+apen new      # you are now inside a fresh, isolated environment
 claude        # or codex, or whatever you run — it lives in here
-abox leave    # the environment and everything in it is deleted
+apen leave    # the environment and everything in it is deleted
 ```
 
 Giving a coding agent your whole computer means giving it your SSH keys, your
@@ -27,7 +27,7 @@ other projects, your browser profile and whatever is listening on localhost.
 ```
   shared     /workspace      <->   ~/.agentspace/spaces/<name>/workspace
   blocked    your home directory, your SSH keys, your other repos
-  gone       everything, the moment you run `abox leave`
+  gone       everything, the moment you run `apen leave`
 ```
 
 You can open, edit and watch the workspace from your machine like any other
@@ -54,59 +54,59 @@ best one that is actually present and tells you which it chose:
 | native Seatbelt (macOS) | nothing | **nothing at all** |
 
 With none of them installed, macOS still gets the native backend, so
-`abox new` works out of the box.
+`apen new` works out of the box.
 
 ```bash
-abox doctor    # check this machine can run spaces
+apen doctor    # check this machine can run spaces
 ```
 
 ## Use it
 
 ```bash
-abox new                  # random name, drops you straight in
-abox new scratch          # name it
-abox new --net none       # no network at all
-abox new --keep           # survives `leave`, re-enter later
-abox new --env OPENAI_API_KEY   # forward one host variable in
-abox new --stack minimal        # just the rules, none of the scaffolding
-abox new --no-start             # scaffold it now, start it later
+apen new                  # random name, drops you straight in
+apen new scratch          # name it
+apen new --net none       # no network at all
+apen new --keep           # survives `leave`, re-enter later
+apen new --env OPENAI_API_KEY   # forward one host variable in
+apen new --stack minimal        # just the rules, none of the scaffolding
+apen new --no-start             # scaffold it now, start it later
 ```
 
 Once inside, every command runs in the space. When you are done:
 
 ```bash
-abox leave                # destroy it, return to your machine
-abox leave --keep         # detach, keep it for `abox enter`
-abox status               # what is shared, what is blocked
+apen leave                # destroy it, return to your machine
+apen leave --keep         # detach, keep it for `apen enter`
+apen status               # what is shared, what is blocked
 ```
 
 From the host:
 
 | Command | What it does |
 |---|---|
-| `abox ls` | every space, its state, size and lifetime |
-| `abox enter <name>` | go back into a kept space |
-| `abox exec -- <cmd>` | run one command inside without attaching |
-| `abox status [name]` | isolation settings and disk usage |
-| `abox stop [name]` | halt a space, keep its files, release its memory |
-| `abox down` | stop every space and the build VM |
-| `abox rm <name...>` | destroy specific spaces |
-| `abox prune` | destroy every ephemeral space |
-| `abox doctor` | check backends, templates and config |
-| `abox config` | view or change defaults |
+| `apen ls` | every space, its state, size and lifetime |
+| `apen enter <name>` | go back into a kept space |
+| `apen exec -- <cmd>` | run one command inside without attaching |
+| `apen status [name]` | isolation settings and disk usage |
+| `apen stop [name]` | halt a space, keep its files, release its memory |
+| `apen down` | stop every space and the build VM |
+| `apen rm <name...>` | destroy specific spaces |
+| `apen prune` | destroy every ephemeral space |
+| `apen doctor` | check backends, templates and config |
+| `apen config` | view or change defaults |
 
 ## Ephemeral means ephemeral
 
-`abox leave` deletes the container **and** the workspace. Git commits inside
+`apen leave` deletes the container **and** the workspace. Git commits inside
 a space die with it. To keep work, do one of:
 
 - `git push` to a real remote from inside,
-- `abox leave --keep` (or create it with `--keep`),
+- `apen leave --keep` (or create it with `--keep`),
 - copy it out from the host: `cp -r ~/.agentspace/spaces/<name>/workspace .`
 
 If the shell just ends — `exit`, Ctrl-D, a crash — agentpen **asks** before
-deleting anything rather than assuming. Only an explicit `abox leave` destroys
-without a prompt. Turn the prompt off with `abox config set confirmOnLeave false`.
+deleting anything rather than assuming. Only an explicit `apen leave` destroys
+without a prompt. Turn the prompt off with `apen config set confirmOnLeave false`.
 
 ## What is preinstalled
 
@@ -164,7 +164,7 @@ Run `/loop <what you want>` inside a space to drive the whole thing.
 picked and why it skipped the others. Pin one if you never want a fallback:
 
 ```bash
-abox config set backend apple
+apen config set backend apple
 ```
 
 The native backend is a genuine trade: it is the only one that needs nothing
@@ -195,18 +195,18 @@ send whatever is in `/workspace` anywhere. Forward secrets in deliberately
 ## Configuration
 
 ```bash
-abox config                        # show everything
-abox config set network none       # default new spaces to offline
-abox config set confirmOnLeave false
-abox config set forwardEnv ANTHROPIC_API_KEY,GITHUB_TOKEN
+apen config                        # show everything
+apen config set network none       # default new spaces to offline
+apen config set confirmOnLeave false
+apen config set forwardEnv ANTHROPIC_API_KEY,GITHUB_TOKEN
 ```
 
 | Key | Default | Meaning |
 |---|---|---|
 | `backend` | `auto` | `auto`, `apple`, `docker` or `native` |
 | `network` | `full` | default `--net` for new spaces |
-| `confirmOnLeave` | `true` | ask before deleting when a shell ends without `abox leave` |
-| `image` | `agentspace/base:0.5` | container image |
+| `confirmOnLeave` | `true` | ask before deleting when a shell ends without `apen leave` |
+| `image` | `agentspace/base:0.6` | container image |
 | `memory` / `cpus` | `2g` / `2` | per-space ceiling (a VM commits only what it touches) |
 | `forwardEnv` | API key names | host variables every space may see |
 
@@ -229,23 +229,23 @@ Two things follow, and agentpen now does both for you:
 
 - **The build VM is reclaimed after every image build.** It used to sit at
   2.2 GB indefinitely; it restarts on demand the next time an image is built.
-- **`abox leave --keep` stops the environment**, it does not just detach.
-  Keeping your files should not mean keeping a VM resident. `abox enter`
+- **`apen leave --keep` stops the environment**, it does not just detach.
+  Keeping your files should not mean keeping a VM resident. `apen enter`
   brings it back with everything intact.
 
 Check what is running at any time:
 
 ```bash
-abox doctor        # reports guest VMs and their combined memory
-abox stop <name>   # halt one space, keep its files
-abox down          # stop everything agentpen started
+apen doctor        # reports guest VMs and their combined memory
+apen stop <name>   # halt one space, keep its files
+apen down          # stop everything agentpen started
 container system stop   # shut the runtime down entirely (Apple backend)
 ```
 
 If memory is tight, the native backend costs nothing at all:
 
 ```bash
-abox new quick --backend native
+apen new quick --backend native
 ```
 
 ## Threat model

@@ -4,7 +4,7 @@ description: Orient in this space — what it is, what state the work is in, wha
 
 Report the current state of this workspace. Be brief and concrete.
 
-1. Run `abox status` and report the isolation settings.
+1. Run `apen status` and report the isolation settings.
 2. List `docs/specs/`, `docs/plans/`, `docs/decisions/`, `docs/research/` and
    summarise each in one line, newest first.
 3. For the most recent plan, report which steps are ticked and which is next.
@@ -14,4 +14,4 @@ Report the current state of this workspace. Be brief and concrete.
 
 Finish with: **where the work stands** in one sentence, and **the single next
 action** in one sentence. Then remind the user whether anything here has left
-the space yet — this workspace is destroyed on `abox leave`.
+the space yet — this workspace is destroyed on `apen leave`.

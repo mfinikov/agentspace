@@ -1,6 +1,6 @@
 {
   "name": "agentpen",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Ephemeral, sandboxed workspaces for AI agents. One folder in, nothing out, everything gone when you leave.",
   "keywords": [
     "agent",
@@ -21,7 +21,7 @@
   "license": "MIT",
   "type": "module",
   "bin": {
-    "abox": "dist/cli.js",
+    "apen": "dist/cli.js",
     "agentpen": "dist/cli.js"
   },
   "files": [

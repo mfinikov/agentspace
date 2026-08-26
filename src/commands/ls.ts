@@ -15,6 +15,13 @@ function age(iso: string): string {
   return `${Math.floor(hours / 24)}d ago`
 }
 
+function stateLabel(space: { backend: Parameters<typeof getBackend>[0] }): string {
+  const backend = getBackend(space.backend)
+  // The native sandbox has nothing to be up or down; it is simply available.
+  if (!backend.persistent) return pc.dim('ready')
+  return backend.isRunning(space as never) ? pc.green('up') : pc.dim('down')
+}
+
 // Colour codes must not count toward column width.
 const ANSI = /\x1b\[[0-9;]*m/g
 const visibleWidth = (s: string) => s.replace(ANSI, '').length
@@ -29,14 +36,14 @@ export async function cmdLs(args: Args): Promise<number> {
 
   if (!spaces.length) {
     log.info('no spaces yet')
-    log.dim('  create one: abox new')
+    log.dim('  create one: apen new')
     return 0
   }
 
   const current = getCurrent()
   const rows = spaces.map((s) => ({
     name: s.name + (s.name === current ? pc.cyan(' *') : ''),
-    state: getBackend(s.backend).isRunning(s) ? pc.green('up') : pc.dim('down'),
+    state: stateLabel(s),
     backend: s.backend,
     net: s.network,
     life: s.ephemeral ? 'ephemeral' : pc.yellow('kept'),
@@ -57,7 +64,7 @@ export async function cmdLs(args: Args): Promise<number> {
   }
   if (current) {
     log.blank()
-    log.dim('* current — `abox leave` acts on this one')
+    log.dim('* current — `apen leave` acts on this one')
   }
   return 0
 }

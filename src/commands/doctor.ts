@@ -71,7 +71,7 @@ export async function cmdDoctor(_args: Args): Promise<number> {
     const running = spaces.filter((s) => getBackend(s.backend).isRunning(s)).length
     if (vms.count > running) {
       log.dim(`  ${vms.count - running} VM(s) are not spaces — usually the build VM`)
-      log.dim('  release them with `abox down`')
+      log.dim('  release them with `apen down`')
     }
   }
 
@@ -83,7 +83,7 @@ export async function cmdDoctor(_args: Args): Promise<number> {
 
   log.blank()
   if (problems === 0) {
-    log.ok('everything checks out — `abox new` will work')
+    log.ok('everything checks out — `apen new` will work')
   } else {
     log.error(`${problems} problem(s) found`)
   }

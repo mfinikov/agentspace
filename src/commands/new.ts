@@ -24,7 +24,7 @@ export async function cmdNew(args: Args): Promise<number> {
   if (spaceExists(name)) {
     throw new UserError(
       `a space called "${name}" already exists`,
-      `enter it with \`abox enter ${name}\`, or destroy it with \`abox rm ${name}\``,
+      `enter it with \`apen enter ${name}\`, or destroy it with \`apen rm ${name}\``,
     )
   }
 
@@ -85,13 +85,13 @@ export async function cmdNew(args: Args): Promise<number> {
       log.blank()
       log.info(summary(space))
       log.blank()
-      log.dim(`start it with: abox enter ${name}`)
+      log.dim(`start it with: apen enter ${name}`)
       return 0
     }
 
     await backend.prepare(image, { rebuild: args.bool('rebuild') })
 
-    // The in-space `abox` shim reads these, so they must exist before the
+    // The in-space `apen` shim reads these, so they must exist before the
     // environment starts — `--no-attach` spaces never reach runSession.
     const control = writeControl(space, motd(space))
 
@@ -121,7 +121,7 @@ export async function cmdNew(args: Args): Promise<number> {
 
   if (args.bool('no-attach')) {
     log.blank()
-    log.dim(`enter it with: abox enter ${name}`)
+    log.dim(`enter it with: apen enter ${name}`)
     return 0
   }
 

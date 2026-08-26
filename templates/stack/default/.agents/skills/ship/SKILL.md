@@ -27,7 +27,7 @@ This is an ephemeral space. **Committing is not saving.** When the space is
 destroyed, its git history goes with it unless the work left the space:
 
 - push to a remote, or
-- `abox leave --keep` to keep the space on disk, or
+- `apen leave --keep` to keep the space on disk, or
 - copy the result out from the host side.
 
 Say which one applies in your handoff. An agent that reports "committed" and

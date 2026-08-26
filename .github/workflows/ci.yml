@@ -38,7 +38,7 @@ jobs:
             agentspace/base:ci bash -lc '
               set -e
               test "$(whoami)" = agent
-              command -v abox
+              command -v apen
               test ! -d /Users
               command -v claude
               git config --global user.email > /dev/null

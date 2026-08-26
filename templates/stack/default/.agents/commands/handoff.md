@@ -26,7 +26,7 @@ The single next thing to do, concretely enough to start without deciding.
 Things that look fine and are not. Dead ends already tried — do not retry them.
 
 ## Getting this work out
-This space is ephemeral. To keep it: <push target / `abox leave --keep` /
+This space is ephemeral. To keep it: <push target / `apen leave --keep` /
 copy path>.
 ```
 

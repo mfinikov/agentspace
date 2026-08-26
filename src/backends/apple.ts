@@ -21,6 +21,7 @@ function bin(): string {
  */
 export class AppleBackend implements Backend {
   readonly name = 'apple' as const
+  readonly persistent = true
 
   unavailableReason(): string | null {
     if (process.platform !== 'darwin') return 'Apple `container` only exists on macOS'

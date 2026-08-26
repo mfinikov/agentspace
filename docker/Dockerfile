@@ -23,10 +23,10 @@ RUN if getent group "${AGENT_GID}" >/dev/null; then \
  && mkdir -p /home/agent/.local/bin /workspace /run/agentspace \
  && chown -R agent:agent /home/agent /workspace /run/agentspace
 
-COPY shim/abox /usr/local/bin/abox
+COPY shim/apen /usr/local/bin/apen
 COPY shim/agentspace.sh /etc/profile.d/agentspace.sh
 COPY shim/bashrc /home/agent/.bashrc
-RUN chmod 0755 /usr/local/bin/abox /etc/profile.d/agentspace.sh \
+RUN chmod 0755 /usr/local/bin/apen /etc/profile.d/agentspace.sh \
  && chown agent:agent /home/agent/.bashrc
 
 USER agent

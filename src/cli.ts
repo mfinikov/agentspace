@@ -11,7 +11,7 @@ import { cmdDoctor } from './commands/doctor.js'
 import { cmdConfig } from './commands/config.js'
 import { cmdDown, cmdStop } from './commands/stop.js'
 
-const VERSION = '0.1.0'
+const VERSION = '0.1.1'
 
 type Handler = (args: Args) => Promise<number>
 
@@ -40,7 +40,7 @@ ${b('agentsandbox')} ${d(`v${VERSION}`)} — a disposable machine for your agent
   One folder goes in. Nothing comes out. Everything is gone when you leave.
 
 ${b('USAGE')}
-  abox <command> [options]
+  apen <command> [options]
 
 ${b('COMMANDS')}
   ${b('new')} [name]           create a space and drop into it
@@ -68,9 +68,9 @@ ${b('NEW OPTIONS')}
   --rebuild              rebuild the base image first
 
 ${b('INSIDE A SPACE')}
-  abox leave           destroy it and return
-  abox leave --keep    detach, keep it for \`abox enter\`
-  abox status          what is isolated and what is shared
+  apen leave           destroy it and return
+  apen leave --keep    detach, keep it for \`apen enter\`
+  apen status          what is isolated and what is shared
 
 ${b('WHAT IS ISOLATED')}
   ${pc.green('shared')}    /workspace  ${d('<->')}  ~/.agentspace/spaces/<name>/workspace
@@ -98,7 +98,7 @@ async function main(): Promise<number> {
   if (!handler) {
     log.error(`unknown command "${first}"`)
     log.dim(`  known commands: ${Object.keys(COMMANDS).join(', ')}`)
-    log.dim('  run `abox help` for usage')
+    log.dim('  run `apen help` for usage')
     return 1
   }
 

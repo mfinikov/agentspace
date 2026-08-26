@@ -24,7 +24,7 @@ export async function cmdStop(args: Args): Promise<number> {
       reclaimBuilders()
       return 0
     }
-    throw new UserError('nothing to stop', 'usage: abox stop [name...] | abox stop --all')
+    throw new UserError('nothing to stop', 'usage: apen stop [name...] | apen stop --all')
   }
 
   let stopped = 0
@@ -35,7 +35,7 @@ export async function cmdStop(args: Args): Promise<number> {
       continue
     }
     const backend = getBackend(space.backend)
-    if (!backend.isRunning(space)) continue
+    if (!backend.persistent || !backend.isRunning(space)) continue
     await backend.stop(space)
     stopped++
     log.ok(`stopped ${pc.bold(space.name)} — files kept, memory released`)

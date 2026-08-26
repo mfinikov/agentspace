@@ -77,7 +77,7 @@ ${b('WHAT IS ISOLATED')}
   ${pc.red('blocked')}   your home directory, your keys, your other projects,
             anything listening on your machine's localhost
 
-${d('  https://github.com/mfinikov/agentsandbox')}
+${d('  https://github.com/mfinikov/agentpen')}
 `)
 }
 

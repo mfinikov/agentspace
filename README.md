@@ -1,7 +1,7 @@
 # agentpen
 
 [![npm](https://img.shields.io/npm/v/agentpen.svg)](https://www.npmjs.com/package/agentpen)
-[![ci](https://github.com/mfinikov/agentsandbox/actions/workflows/ci.yml/badge.svg)](https://github.com/mfinikov/agentsandbox/actions/workflows/ci.yml)
+[![ci](https://github.com/mfinikov/agentpen/actions/workflows/ci.yml/badge.svg)](https://github.com/mfinikov/agentpen/actions/workflows/ci.yml)
 [![license](https://img.shields.io/npm/l/agentpen.svg)](./LICENSE)
 
 **A disposable machine for your agents.** One folder goes in. Nothing comes

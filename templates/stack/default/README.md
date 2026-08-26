@@ -1,6 +1,6 @@
 # workspace
 
-An [agentspace](https://github.com/mfinikov/agentsandbox): a disposable,
+An [agentspace](https://github.com/mfinikov/agentpen): a disposable,
 sandboxed machine for running AI agents.
 
 - `/workspace` is shared with the host. Everything else is ephemeral.

@@ -49,13 +49,13 @@
     "tsup": "^8.3.5",
     "typescript": "^5.7.2"
   },
-  "homepage": "https://github.com/mfinikov/agentsandbox#readme",
+  "homepage": "https://github.com/mfinikov/agentpen#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mfinikov/agentsandbox.git"
+    "url": "git+https://github.com/mfinikov/agentpen.git"
   },
   "bugs": {
-    "url": "https://github.com/mfinikov/agentsandbox/issues"
+    "url": "https://github.com/mfinikov/agentpen/issues"
   },
   "author": "mfinikov",
   "os": [

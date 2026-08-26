@@ -1,11 +1,12 @@
 import fs from 'node:fs'
 import pc from 'picocolors'
-import { allBackends } from '../backends/index.js'
+import { allBackends, getBackend } from '../backends/index.js'
 import { loadConfig } from '../core/config.js'
 import { log } from '../core/log.js'
 import { home, templatesDir } from '../core/paths.js'
 import { availableStacks } from '../core/scaffold.js'
 import { listSpaces } from '../core/state.js'
+import { formatMegabytes, virtualMachineUsage } from '../core/resources.js'
 import type { Args } from '../cli-args.js'
 
 export async function cmdDoctor(_args: Args): Promise<number> {
@@ -60,6 +61,19 @@ export async function cmdDoctor(_args: Args): Promise<number> {
   if (!writable(home())) problems++
   const spaces = listSpaces()
   log.info(`  spaces       ${spaces.length}`)
+
+  const vms = virtualMachineUsage()
+  if (vms && vms.count > 0) {
+    log.blank()
+    log.info(pc.bold('resources'))
+    log.info(`  guest VMs    ${vms.count}`)
+    log.info(`  memory       ${formatMegabytes(vms.megabytes)}`)
+    const running = spaces.filter((s) => getBackend(s.backend).isRunning(s)).length
+    if (vms.count > running) {
+      log.dim(`  ${vms.count - running} VM(s) are not spaces — usually the build VM`)
+      log.dim('  release them with `aspace down`')
+    }
+  }
 
   log.blank()
   log.info(pc.bold('config'))

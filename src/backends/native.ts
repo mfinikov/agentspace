@@ -123,6 +123,10 @@ ${
     })
   }
 
+  async stop(): Promise<void> {
+    // Nothing runs between shells, so there is nothing to halt.
+  }
+
   async destroy(): Promise<void> {
     // The sandbox leaves nothing behind beyond the space directory, which the
     // caller removes.

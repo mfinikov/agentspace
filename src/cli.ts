@@ -9,6 +9,7 @@ import { cmdEnter, cmdExec } from './commands/enter.js'
 import { cmdStatus } from './commands/status.js'
 import { cmdDoctor } from './commands/doctor.js'
 import { cmdConfig } from './commands/config.js'
+import { cmdDown, cmdStop } from './commands/stop.js'
 
 const VERSION = '0.1.0'
 
@@ -22,6 +23,8 @@ const COMMANDS: Record<string, Handler> = {
   ls: cmdLs,
   list: cmdLs,
   status: cmdStatus,
+  stop: cmdStop,
+  down: cmdDown,
   rm: cmdRm,
   prune: cmdPrune,
   doctor: cmdDoctor,
@@ -46,6 +49,8 @@ ${b('COMMANDS')}
   ${b('exec')} -- <cmd>        run one command inside a space
   ${b('ls')}                   list spaces
   ${b('status')} [name]        show a space's isolation settings and size
+  ${b('stop')} [name]          halt a space, keep its files, release its memory
+  ${b('down')}                 stop every space and the build VM
   ${b('rm')} <name...>         destroy specific spaces
   ${b('prune')}                destroy every ephemeral space
   ${b('doctor')}               check that this machine can run spaces

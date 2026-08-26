@@ -80,6 +80,8 @@ From the host:
 | `aspace enter <name>` | go back into a kept space |
 | `aspace exec -- <cmd>` | run one command inside without attaching |
 | `aspace status [name]` | isolation settings and disk usage |
+| `aspace stop [name]` | halt a space, keep its files, release its memory |
+| `aspace down` | stop every space and the build VM |
 | `aspace rm <name...>` | destroy specific spaces |
 | `aspace prune` | destroy every ephemeral space |
 | `aspace doctor` | check backends, templates and config |
@@ -197,10 +199,46 @@ aspace config set forwardEnv ANTHROPIC_API_KEY,GITHUB_TOKEN
 | `network` | `full` | default `--net` for new spaces |
 | `confirmOnLeave` | `true` | ask before deleting when a shell ends without `aspace leave` |
 | `image` | `agentspace/base:0.4` | container image |
-| `memory` / `cpus` | `4g` / `2` | resource limits |
+| `memory` / `cpus` | `2g` / `2` | per-space ceiling (a VM commits only what it touches) |
 | `forwardEnv` | API key names | host variables every space may see |
 
 State lives in `~/.agentspace` (override with `AGENTSPACE_HOME`).
+
+## Resource use
+
+A container backend runs each space in its own lightweight VM, so this is worth
+knowing. Measured on macOS with `footprint`, the number Activity Monitor shows:
+
+| | Cost |
+|---|---|
+| an idle space (`--memory 2g`) | **~310 MB** |
+| the same space at `--memory 4g` | ~430 MB |
+| Apple's build VM, after building an image | **~2.2 GB** |
+| a stopped space | **0** |
+| a native-backend space | **0** — no VM at all |
+
+Two things follow, and agentspace now does both for you:
+
+- **The build VM is reclaimed after every image build.** It used to sit at
+  2.2 GB indefinitely; it restarts on demand the next time an image is built.
+- **`aspace leave --keep` stops the environment**, it does not just detach.
+  Keeping your files should not mean keeping a VM resident. `aspace enter`
+  brings it back with everything intact.
+
+Check what is running at any time:
+
+```bash
+aspace doctor        # reports guest VMs and their combined memory
+aspace stop <name>   # halt one space, keep its files
+aspace down          # stop everything agentspace started
+container system stop   # shut the runtime down entirely (Apple backend)
+```
+
+If memory is tight, the native backend costs nothing at all:
+
+```bash
+aspace new quick --backend native
+```
 
 ## Threat model
 

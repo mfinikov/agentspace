@@ -51,6 +51,12 @@ export class AppleBackend implements Backend {
     args.push(context)
     const code = runInherit(bin(), args)
     if (code !== 0) throw new Error('container build failed — see the output above')
+
+    // The buildkit VM stays up after a build holding ~2GB for nothing. It
+    // restarts on demand the next time an image is built.
+    if (run(bin(), ['builder', 'stop']).code === 0) {
+      log.dim('  stopped the build VM (it restarts when next needed)')
+    }
     log.ok(`image ${image} ready`)
   }
 
@@ -118,6 +124,10 @@ export class AppleBackend implements Backend {
       containerName(space.name),
       '/bin/bash', '-lc', argv.join(' '),
     ])
+  }
+
+  async stop(space: SpaceManifest): Promise<void> {
+    run(bin(), ['stop', containerName(space.name)])
   }
 
   async destroy(space: SpaceManifest): Promise<void> {

@@ -104,10 +104,11 @@ export async function runSession(space: SpaceManifest, backend: Backend): Promis
 }
 
 export async function detach(space: SpaceManifest, backend: Backend): Promise<void> {
-  void backend
+  // Keeping a space must not mean keeping a VM resident. `enter` restarts it.
+  await backend.stop(space)
   setCurrent(null)
   log.blank()
-  log.ok(`left ${pc.bold(space.name)} — it is still here`)
+  log.ok(`left ${pc.bold(space.name)} — files kept, environment stopped`)
   log.dim(`  files:  ${workspaceDir(space.name)}`)
   log.dim(`  return: aspace enter ${space.name}`)
   log.dim(`  delete: aspace rm ${space.name}`)

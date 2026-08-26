@@ -134,7 +134,7 @@ test('--keep marks the space persistent', () => {
   aspace(['new', 'kept', '--backend', 'native', '--keep', '--no-attach'])
   const manifest = JSON.parse(fs.readFileSync(path.join(spaceRoot('kept'), 'space.json'), 'utf8'))
   assert.equal(manifest.ephemeral, false)
-  assert.match(aspace(['leave', 'kept']).stdout, /still here/)
+  assert.match(aspace(['leave', 'kept']).stdout, /files kept/)
   assert.ok(fs.existsSync(workspace('kept')), 'a kept space must survive leave')
 })
 
@@ -208,6 +208,35 @@ test('an unknown stack is refused before anything is created', () => {
   assert.equal(code, 1)
   assert.match(stdout, /unknown stack/)
   assert.equal(fs.existsSync(spaceRoot('nostack')), false)
+})
+
+test('a one-character name is valid', () => {
+  aspace(['new', 'x', '--backend', 'native', '--no-attach'])
+  assert.ok(fs.existsSync(path.join(workspace('x'), 'AGENTS.md')))
+  aspace(['rm', 'x', '--force'])
+})
+
+test('stop keeps the files and is safe to repeat', () => {
+  aspace(['new', 'halted', '--backend', 'native', '--keep', '--no-attach'])
+  fs.writeFileSync(path.join(workspace('halted'), 'survives.txt'), 'still here')
+  aspace(['stop', 'halted'])
+  aspace(['stop', 'halted'])
+  assert.equal(
+    fs.readFileSync(path.join(workspace('halted'), 'survives.txt'), 'utf8'),
+    'still here',
+  )
+  aspace(['rm', 'halted', '--force'])
+})
+
+test('down succeeds when there is nothing running', () => {
+  const { code } = aspace(['down'], { allowFailure: true })
+  assert.equal(code, 0)
+})
+
+test('the default memory ceiling is sized for a laptop', () => {
+  // A container VM commits only what the guest touches, but the ceiling is
+  // what a runaway process can reach — 4g per space was too much on 16GB.
+  assert.equal(aspace(['config', 'get', 'memory']).stdout.trim(), '2g')
 })
 
 test('doctor exits zero when a backend is available', () => {

@@ -13,7 +13,11 @@ export interface Config {
   confirmOnLeave: boolean
   /** Container image used by the docker backend. */
   image: string
-  /** Memory limit passed to the container runtime, e.g. "4g". */
+  /**
+   * Memory ceiling for a space, e.g. "2g". A container VM commits only what
+   * the guest touches (~300MB at rest for 2g), so this is a cap, not a
+   * reservation — but a runaway process inside can reach it.
+   */
   memory: string
   /** CPU limit passed to the container runtime, e.g. "2". */
   cpus: string
@@ -26,7 +30,7 @@ export const DEFAULT_CONFIG: Config = {
   network: 'full',
   confirmOnLeave: true,
   image: 'agentspace/base:0.4',
-  memory: '4g',
+  memory: '2g',
   cpus: '2',
   forwardEnv: ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GEMINI_API_KEY'],
 }

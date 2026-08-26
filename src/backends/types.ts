@@ -26,6 +26,11 @@ export interface Backend {
   exec(space: SpaceManifest, argv: string[], opts: { workspace: string; control: string }): Promise<number>
   /** Is the environment currently running? */
   isRunning(space: SpaceManifest): boolean
+  /**
+   * Halt the environment without destroying it, releasing its memory.
+   * `aspace enter` brings it back. Idempotent.
+   */
+  stop(space: SpaceManifest): Promise<void>
   /** Stop and delete the environment (idempotent). */
   destroy(space: SpaceManifest): Promise<void>
 }

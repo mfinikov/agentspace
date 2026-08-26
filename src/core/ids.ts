@@ -22,7 +22,7 @@ export function generateName(): string {
   return `${pick(ADJECTIVES)}-${pick(NOUNS)}-${crypto.randomBytes(2).toString('hex')}`
 }
 
-const SLUG_OK = /^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$/
+const SLUG_OK = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/
 
 export function slugify(raw: string): string {
   return raw
@@ -37,7 +37,7 @@ export function slugify(raw: string): string {
 export function assertValidName(name: string): void {
   if (!SLUG_OK.test(name)) {
     throw new Error(
-      `invalid space name "${name}" — use 2-40 lowercase letters, digits and dashes`,
+      `invalid space name "${name}" — use 1-40 lowercase letters, digits and dashes`,
     )
   }
 }

@@ -111,6 +111,10 @@ export class DockerBackend implements Backend {
     ])
   }
 
+  async stop(space: SpaceManifest): Promise<void> {
+    run(dockerBin(), ['stop', '-t', '3', containerName(space.name)])
+  }
+
   async destroy(space: SpaceManifest): Promise<void> {
     run(dockerBin(), ['rm', '-f', '-v', containerName(space.name)])
   }

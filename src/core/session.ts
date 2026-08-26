@@ -16,8 +16,27 @@ import {
 } from './state.js'
 import { workspaceDir } from './paths.js'
 
+/**
+ * Say exactly what the network policy buys, per backend. Verified by probing a
+ * live host service from inside each: a container on `full` CAN reach services
+ * on this machine over its LAN address, while the Seatbelt sandbox refuses
+ * every connection to a local address. Do not soften this into a guarantee the
+ * runtime does not make.
+ */
+export function networkDescription(space: SpaceManifest): string {
+  if (space.network === 'none') return 'no network at all'
+  return space.backend === 'native'
+    ? 'internet only — this machine is unreachable'
+    : 'internet and your local network — including services on this machine'
+}
+
 export function motd(space: SpaceManifest): string {
-  const net = space.network === 'none' ? 'no network' : 'internet only, host unreachable'
+  const net =
+    space.network === 'none'
+      ? 'offline'
+      : space.backend === 'native'
+        ? 'internet only'
+        : 'internet + your local network'
   const life = space.ephemeral ? 'destroyed on leave' : 'kept on leave'
   return [
     '',
@@ -35,7 +54,7 @@ export function summary(space: SpaceManifest): string {
   return [
     `${pc.bold('space')}     ${space.name}`,
     `${pc.bold('backend')}   ${space.backend}`,
-    `${pc.bold('network')}   ${space.network === 'none' ? 'none (fully offline)' : 'internet only — host unreachable'}`,
+    `${pc.bold('network')}   ${networkDescription(space)}`,
     `${pc.bold('workspace')} ${ws}`,
     `${pc.bold('lifetime')}  ${space.ephemeral ? 'ephemeral — destroyed on leave' : 'persistent — kept on leave'}`,
   ].join('\n')

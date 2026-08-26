@@ -19,13 +19,17 @@ other projects, your browser profile and whatever is listening on localhost.
 
 ```
   shared     /workspace      <->   ~/.agentspace/spaces/<name>/workspace
-  blocked    your home directory, your SSH keys, your other repos,
-             anything listening on your machine's localhost
+  blocked    your home directory, your SSH keys, your other repos
   gone       everything, the moment you run `aspace leave`
 ```
 
 You can open, edit and watch the workspace from your machine like any other
-folder. From inside, there is no path back out.
+folder. From inside, there is no path back out to your filesystem.
+
+**The network is a separate question.** A space with `--net full` (the default)
+can reach the internet — and on a container backend it can also reach services
+on your machine's network. Use `--net none` when that matters; see
+[Network](#network) for the measured behaviour.
 
 ## Install
 
@@ -33,9 +37,17 @@ folder. From inside, there is no path back out.
 npm install -g agentspace
 ```
 
-Requires **Node 20+** and **Docker** ([Docker Desktop](https://docs.docker.com/desktop/)
-is fine). Without Docker on macOS it falls back to a weaker Seatbelt sandbox and
-tells you so — see [Backends](#backends).
+Requires **Node 20+**. A container runtime is optional — agentspace picks the
+best one that is actually present and tells you which it chose:
+
+| Runtime | Install | Anything running in the background? |
+|---|---|---|
+| Apple `container` (macOS 26+) | `brew install container` then `container system start` | a terminal-managed helper |
+| Docker | [Docker Desktop](https://docs.docker.com/desktop/) | the Desktop app |
+| native Seatbelt (macOS) | nothing | **nothing at all** |
+
+With none of them installed, macOS still gets the native backend, so
+`aspace new` works out of the box.
 
 ```bash
 aspace doctor    # check this machine can run spaces
@@ -127,31 +139,48 @@ Run `/loop <what you want>` inside a space to drive the whole thing.
 
 ## Backends
 
-| | `docker` (default) | `native` (fallback) |
-|---|---|---|
-| Isolation | full container: own filesystem, PID and network namespace | macOS Seatbelt profile around a host shell |
-| Host filesystem | invisible | unreadable (`$HOME` denied), unwritable |
-| Host localhost | unreachable — `host.docker.internal` is pinned to `127.0.0.1` | reachable |
-| Installed tools | only what the image has | whatever is on your `PATH` |
-| Privilege escalation | `no-new-privileges`, all capabilities dropped | inherits your user |
+| | `apple` | `docker` | `native` |
+|---|---|---|---|
+| What it is | Apple's container runtime, macOS 26+ | Docker Desktop / any Docker daemon | macOS Seatbelt around a host shell |
+| Background process | terminal-managed helper | the Desktop app | **none** |
+| Host filesystem | invisible | invisible | `$HOME` unreadable, writes confined to the workspace |
+| Services on your machine | reachable on `--net full` | reachable on `--net full` | **refused, always** |
+| Kernel | separate VM | separate VM | **shared with your Mac** |
+| Installed tools | image only | image only | whatever is on your `PATH` |
+| Privilege escalation | all capabilities dropped | `no-new-privileges`, all caps dropped | runs as you |
+| Startup | seconds | seconds | instant |
 
-`auto` (the default) picks docker and falls back to native with a warning. The
-native backend is a convenience, not an equivalent — it shares your kernel and
-your binaries. When the isolation actually matters, use docker.
+`auto` (the default) tries **apple → docker → native** and prints which one it
+picked and why it skipped the others. Pin one if you never want a fallback:
 
 ```bash
-aspace config set backend docker    # never silently fall back
+aspace config set backend apple
 ```
+
+The native backend is a genuine trade: it is the only one that needs nothing
+installed and leaves nothing running, and it is the only one that blocks your
+own machine's services outright — but it shares your kernel and your binaries.
+For untrusted code, use a container backend.
 
 ## Network
 
-`--net full` (default) gives the space the internet but not your machine.
-`--net none` gives it nothing.
+`--net full` (the default) gives the space the internet. `--net none` gives it
+nothing. Measured from inside a live space against a real service on the host:
 
-Nothing about the network is a substitute for judgement: a space with internet
-access can still exfiltrate whatever you put in `/workspace`. Forward secrets
-in deliberately (`--env`), and use `--net none` when the task does not need to
-be online.
+| | `apple` / `docker` | `native` |
+|---|---|---|
+| internet, `--net full` | reachable | reachable |
+| this machine's services, `--net full` | **reachable** | refused |
+| anything, `--net none` | refused | refused |
+
+So on a container backend, `--net full` is *not* a wall between the space and
+your local network — a container gets an address on a host-visible network and
+can dial your machine back on its LAN address. If an agent must not touch your
+local services, run it with `--net none`, or use the native backend.
+
+Network policy is also not a data boundary: a space with internet access can
+send whatever is in `/workspace` anywhere. Forward secrets in deliberately
+(`--env`), and prefer `--net none` for anything that does not need to be online.
 
 ## Configuration
 
@@ -164,10 +193,10 @@ aspace config set forwardEnv ANTHROPIC_API_KEY,GITHUB_TOKEN
 
 | Key | Default | Meaning |
 |---|---|---|
-| `backend` | `auto` | `auto`, `docker` or `native` |
+| `backend` | `auto` | `auto`, `apple`, `docker` or `native` |
 | `network` | `full` | default `--net` for new spaces |
 | `confirmOnLeave` | `true` | ask before deleting when a shell ends without `aspace leave` |
-| `image` | `agentspace/base:0.3` | container image |
+| `image` | `agentspace/base:0.4` | container image |
 | `memory` / `cpus` | `4g` / `2` | resource limits |
 | `forwardEnv` | API key names | host variables every space may see |
 
@@ -179,9 +208,12 @@ agentspace defends against an agent that wanders — reading files it was not
 pointed at, writing outside its project, poking at your local services. That is
 the realistic failure mode and the one it stops.
 
-It is **not** a defence against a determined attacker with a container escape,
-and it does not protect the contents of `/workspace` itself: anything you put
-in there, or any credential you forward in, is exposed to whatever runs inside.
+It is **not** a defence against a determined attacker with a container escape.
+It does not protect the contents of `/workspace` itself: anything you put in
+there, or any credential you forward in, is exposed to whatever runs inside.
+And on a container backend it does not, by default, stand between the space and
+services on your own network — `--net none` does that.
+
 Treat a space as untrusted, and give it only what the task needs.
 
 ## Development

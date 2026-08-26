@@ -8,11 +8,12 @@ import { attach as attachProc, which } from '../core/proc.js'
 /**
  * macOS-only fallback that uses the Seatbelt sandbox (`sandbox-exec`).
  *
- * It is weaker than the container backend — the process still runs on the host
- * kernel, with the host's binaries and the host's installed packages — but it
- * confines every write to the workspace and blocks all reads of the user's
- * home directory, which covers the main risk: an agent wandering out of its
- * folder. Use it when Docker is not available; `aspace doctor` says so out loud.
+ * It is weaker than a container — the process still runs on the host kernel,
+ * with the host's binaries and installed packages, and it has no PID or
+ * filesystem namespace — but it confines every write to the workspace, blocks
+ * every read of the user's home directory, and refuses connections to services
+ * on this machine. That covers the realistic risk: an agent wandering out of
+ * its folder. It needs nothing installed and leaves nothing running.
  */
 export class NativeBackend implements Backend {
   readonly name = 'native' as const
@@ -61,7 +62,12 @@ export class NativeBackend implements Backend {
 (allow file-read* (subpath ${sexp(opts.workspace)}))
 (allow file-read* (subpath ${sexp(opts.control)}))
 
-${opts.network === 'full' ? '; network: allowed (inherited from allow default)' : '(deny network*)'}
+${
+      opts.network === 'full'
+        ? // The internet is allowed, but never services on this machine.
+          '(deny network-outbound (remote ip "localhost:*"))'
+        : '(deny network*)'
+    }
 `
     const file = this.profilePath(opts.control)
     fs.mkdirSync(opts.control, { recursive: true })
@@ -146,7 +152,7 @@ aspace() {
       echo "backend:  native (macOS sandbox)"
       echo "network:  ${space.network}"
       echo "writable: ${workspace} only"
-      echo "blocked:  your home directory is unreadable from here"
+      echo "blocked:  your home directory, and services on this machine"
       ;;
     *)
       echo "aspace: inside a space you can use: leave [--keep], status" >&2

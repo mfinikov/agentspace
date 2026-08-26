@@ -13,7 +13,7 @@ export interface CreateOptions {
 }
 
 export interface Backend {
-  readonly name: 'docker' | 'native'
+  readonly name: 'apple' | 'docker' | 'native'
   /** Human-readable reason this backend can't run here, or null if it can. */
   unavailableReason(): string | null
   /** Build/prepare any prerequisites (e.g. the base image). */

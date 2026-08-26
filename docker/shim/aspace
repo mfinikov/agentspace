@@ -35,7 +35,11 @@ case "${1:-help}" in
     echo "network:  $(cat "$CONTROL/network" 2>/dev/null || echo unknown)"
     echo "backend:  $(cat "$CONTROL/backend" 2>/dev/null || echo unknown)"
     echo "mounted:  /workspace (shared with host)"
-    echo "isolated: everything outside /workspace"
+    echo "isolated: the host filesystem is not visible from here"
+    if [ "$(cat "$CONTROL/network" 2>/dev/null)" = "full" ]; then
+      echo "note:     with --net full this container can still reach services"
+      echo "          on the host's network. Use --net none to prevent that."
+    fi
     ;;
   tree)
     if command -v tree >/dev/null 2>&1; then tree -L 2 -a -I '.git|node_modules' /workspace

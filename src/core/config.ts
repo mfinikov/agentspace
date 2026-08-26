@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import { configPath, ensureHome } from './paths.js'
 
 export type NetworkMode = 'none' | 'full'
-export type BackendName = 'docker' | 'native'
+export type BackendName = 'apple' | 'docker' | 'native'
 
 export interface Config {
   /** Preferred isolation backend. `auto` picks docker, else native. */
@@ -25,7 +25,7 @@ export const DEFAULT_CONFIG: Config = {
   backend: 'auto',
   network: 'full',
   confirmOnLeave: true,
-  image: 'agentspace/base:0.3',
+  image: 'agentspace/base:0.4',
   memory: '4g',
   cpus: '2',
   forwardEnv: ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY', 'GEMINI_API_KEY'],
@@ -61,8 +61,8 @@ export function configKeys(): (keyof Config)[] {
 export function parseConfigValue(key: string, value: string): Partial<Config> {
   switch (key) {
     case 'backend':
-      if (!['auto', 'docker', 'native'].includes(value)) {
-        throw new Error(`backend must be one of: auto, docker, native`)
+      if (!['auto', 'apple', 'docker', 'native'].includes(value)) {
+        throw new Error(`backend must be one of: auto, apple, docker, native`)
       }
       return { backend: value as Config['backend'] }
     case 'network':

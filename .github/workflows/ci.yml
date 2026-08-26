@@ -23,6 +23,9 @@ jobs:
       - run: npm run build
       - run: npm test
 
+  # The image is shared by the docker and apple backends. GitHub's macOS
+  # runners are older than macOS 26, so Apple's runtime cannot be exercised
+  # here — the native backend is what the macos test job covers.
   image:
     runs-on: ubuntu-latest
     steps:
@@ -37,6 +40,8 @@ jobs:
               test "$(whoami)" = agent
               command -v aspace
               test ! -d /Users
+              command -v claude
+              git config --global user.email > /dev/null
               sudo -n true && { echo "escalation succeeded"; exit 1; } || true
               echo ok
             '

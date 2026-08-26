@@ -164,6 +164,52 @@ test('prune destroys ephemeral spaces and spares kept ones', () => {
   assert.ok(fs.existsSync(spaceRoot('kept')), 'prune must not touch a kept space')
 })
 
+test('backend selection rejects a runtime that does not exist', () => {
+  const { code, stdout } = aspace(['config', 'set', 'backend', 'xen'], { allowFailure: true })
+  assert.equal(code, 1)
+  assert.match(stdout, /backend must be one of: auto, apple, docker, native/)
+})
+
+test('an explicitly requested backend is never silently swapped', () => {
+  // Docker is not running in CI on macOS, so asking for it must fail loudly
+  // rather than quietly producing a weaker native space.
+  const { code, stdout } = aspace(['new', 'pinned', '--backend', 'docker', '--no-attach'], {
+    allowFailure: true,
+  })
+  if (code !== 0) {
+    assert.match(stdout, /cannot run here/)
+    assert.equal(fs.existsSync(spaceRoot('pinned')), false, 'a failed create must leave nothing')
+  } else {
+    const manifest = JSON.parse(fs.readFileSync(path.join(spaceRoot('pinned'), 'space.json'), 'utf8'))
+    assert.equal(manifest.backend, 'docker')
+    aspace(['rm', 'pinned', '--force'])
+  }
+})
+
+test('the minimal stack links only what it ships', () => {
+  aspace(['new', 'small', '--backend', 'native', '--stack', 'minimal', '--no-attach'])
+  const claude = path.join(workspace('small'), '.claude')
+  assert.ok(fs.existsSync(path.join(claude, 'skills')))
+  for (const missing of ['agents', 'commands']) {
+    assert.equal(
+      fs.existsSync(path.join(claude, missing)) || !!fs.lstatSync(path.join(claude, missing), { throwIfNoEntry: false }),
+      false,
+      `.claude/${missing} must not be a dangling link`,
+    )
+  }
+  assert.ok(fs.existsSync(path.join(workspace('small'), 'AGENTS.md')))
+  aspace(['rm', 'small', '--force'])
+})
+
+test('an unknown stack is refused before anything is created', () => {
+  const { code, stdout } = aspace(['new', 'nostack', '--stack', 'nope', '--no-attach'], {
+    allowFailure: true,
+  })
+  assert.equal(code, 1)
+  assert.match(stdout, /unknown stack/)
+  assert.equal(fs.existsSync(spaceRoot('nostack')), false)
+})
+
 test('doctor exits zero when a backend is available', () => {
   const { code, stdout } = aspace(['doctor'], { allowFailure: true })
   assert.match(stdout, /backends/)

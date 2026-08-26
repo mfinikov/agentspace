@@ -31,11 +31,16 @@ export async function cmdDoctor(_args: Args): Promise<number> {
     problems++
     log.blank()
     log.error('no isolation backend is available — agentspace cannot create a space')
-    log.dim('  install Docker Desktop, or run on macOS where sandbox-exec exists')
-  } else if (allBackends()[0]!.unavailableReason()) {
+    log.dim('  install one: `brew install container` (macOS 26+) or Docker Desktop')
+  } else {
+    const chosen = allBackends().find((b) => !b.unavailableReason())!
     log.blank()
-    log.warn('docker is unavailable, so spaces will use the weaker native sandbox')
-    log.dim('  native confines writes to the workspace but shares the host kernel and PATH')
+    log.info(`  auto picks ${pc.bold(chosen.name)}`)
+    if (chosen.name === 'native') {
+      log.warn('the native sandbox shares your kernel and your installed binaries')
+      log.dim('  it confines the workspace and blocks this machine\'s services, but it')
+      log.dim('  is not a container. For untrusted code install a container runtime.')
+    }
   }
 
   log.blank()

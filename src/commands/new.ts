@@ -1,14 +1,18 @@
-import fs from 'node:fs'
 import pc from 'picocolors'
 import { resolveBackend } from '../backends/index.js'
 import { loadConfig, type NetworkMode } from '../core/config.js'
 import { assertValidName, generateName, slugify } from '../core/ids.js'
 import { log, UserError } from '../core/log.js'
 import { writeControl } from '../core/control.js'
-import { createSpaceDirs, spaceExists, writeManifest, type SpaceManifest } from '../core/state.js'
-import { scaffold } from '../core/scaffold.js'
+import {
+  createSpaceDirs,
+  removeSpaceDir,
+  spaceExists,
+  writeManifest,
+  type SpaceManifest,
+} from '../core/state.js'
+import { scaffold, stackDir } from '../core/scaffold.js'
 import { motd, runSession, summary } from '../core/session.js'
-import { workspaceDir } from '../core/paths.js'
 import type { Args } from '../cli-args.js'
 
 export async function cmdNew(args: Args): Promise<number> {
@@ -30,45 +34,54 @@ export async function cmdNew(args: Args): Promise<number> {
   }
 
   const preference = (args.string('backend') ?? cfg.backend) as typeof cfg.backend
-  const { backend, name: backendName } = resolveBackend(preference, (reason) => {
-    log.warn(`docker is unavailable (${reason})`)
-    log.dim('  falling back to the macOS sandbox: weaker isolation, same workspace rules')
+  const { backend, name: backendName } = resolveBackend(preference, (chosen, skipped) => {
+    for (const s of skipped) log.dim(`  ${s.name} unavailable — ${s.reason}`)
+    if (chosen === 'native') {
+      log.warn('using the native sandbox: it confines the workspace but shares your kernel')
+    } else {
+      log.dim(`  using ${chosen}`)
+    }
   })
 
   const stack = args.string('stack') ?? 'default'
   const ephemeral = !args.bool('keep')
   const image = args.string('image') ?? cfg.image
 
+  // Fail on a bad stack name before anything is written to disk.
+  stackDir(stack)
+
   log.blank()
   log.step(`creating ${pc.bold(name)}`)
-
-  const workspace = createSpaceDirs(name)
-  const { filesWritten } = scaffold(workspace, stack, {
-    name,
-    date: new Date().toISOString().slice(0, 10),
-  })
-  log.ok(`seeded the ${stack} agent stack (${filesWritten} files)`)
-
-  await backend.prepare(image, { rebuild: args.bool('rebuild') })
-
-  const env = collectEnv(args, cfg.forwardEnv, name)
 
   const space: SpaceManifest = {
     version: 1,
     name,
     backend: backendName,
     network,
-    image: backendName === 'docker' ? image : undefined,
+    image: backendName === 'native' ? undefined : image,
     createdAt: new Date().toISOString(),
     stack,
     ephemeral,
   }
 
-  // The in-space `aspace` shim reads these, so they must exist before the
-  // environment starts — `--no-attach` spaces never reach runSession.
-  const control = writeControl(space, motd(space))
+  const env = collectEnv(args, cfg.forwardEnv, name)
 
+  // Anything that fails from here on must leave the machine as it found it —
+  // a half-created space is worse than no space, because `ls` will show it.
   try {
+    const workspace = createSpaceDirs(name)
+    const { filesWritten } = scaffold(workspace, stack, {
+      name,
+      date: new Date().toISOString().slice(0, 10),
+    })
+    log.ok(`seeded the ${stack} agent stack (${filesWritten} files)`)
+
+    await backend.prepare(image, { rebuild: args.bool('rebuild') })
+
+    // The in-space `aspace` shim reads these, so they must exist before the
+    // environment starts — `--no-attach` spaces never reach runSession.
+    const control = writeControl(space, motd(space))
+
     space.handle = await backend.create({
       name,
       workspace,
@@ -80,7 +93,8 @@ export async function cmdNew(args: Args): Promise<number> {
       env,
     })
   } catch (err) {
-    fs.rmSync(workspaceDir(name), { recursive: true, force: true })
+    await backend.destroy(space).catch(() => {})
+    removeSpaceDir(name)
     throw err
   }
 

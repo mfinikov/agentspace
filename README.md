@@ -1,5 +1,9 @@
 # agentpen
 
+[![npm](https://img.shields.io/npm/v/agentpen.svg)](https://www.npmjs.com/package/agentpen)
+[![ci](https://github.com/mfinikov/agentsandbox/actions/workflows/ci.yml/badge.svg)](https://github.com/mfinikov/agentsandbox/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/agentpen.svg)](./LICENSE)
+
 **A disposable machine for your agents.** One folder goes in. Nothing comes
 out. Everything is gone when you leave.
 
@@ -14,7 +18,7 @@ abox leave    # the environment and everything in it is deleted
 
 Giving a coding agent your whole computer means giving it your SSH keys, your
 other projects, your browser profile and whatever is listening on localhost.
-`agentspace` gives it one folder and a container instead.
+`agentpen` gives it one folder and a container instead.
 
 ---
 
@@ -40,7 +44,7 @@ on your machine's network. Use `--net none` when that matters; see
 npm install -g agentpen
 ```
 
-Requires **Node 20+**. A container runtime is optional — agentspace picks the
+Requires **Node 20+**. A container runtime is optional — agentpen picks the
 best one that is actually present and tells you which it chose:
 
 | Runtime | Install | Anything running in the background? |
@@ -65,6 +69,7 @@ abox new --net none       # no network at all
 abox new --keep           # survives `leave`, re-enter later
 abox new --env OPENAI_API_KEY   # forward one host variable in
 abox new --stack minimal        # just the rules, none of the scaffolding
+abox new --no-start             # scaffold it now, start it later
 ```
 
 Once inside, every command runs in the space. When you are done:
@@ -99,7 +104,7 @@ a space die with it. To keep work, do one of:
 - `abox leave --keep` (or create it with `--keep`),
 - copy it out from the host: `cp -r ~/.agentspace/spaces/<name>/workspace .`
 
-If the shell just ends — `exit`, Ctrl-D, a crash — agentspace **asks** before
+If the shell just ends — `exit`, Ctrl-D, a crash — agentpen **asks** before
 deleting anything rather than assuming. Only an explicit `abox leave` destroys
 without a prompt. Turn the prompt off with `abox config set confirmOnLeave false`.
 
@@ -220,7 +225,7 @@ knowing. Measured on macOS with `footprint`, the number Activity Monitor shows:
 | a stopped space | **0** |
 | a native-backend space | **0** — no VM at all |
 
-Two things follow, and agentspace now does both for you:
+Two things follow, and agentpen now does both for you:
 
 - **The build VM is reclaimed after every image build.** It used to sit at
   2.2 GB indefinitely; it restarts on demand the next time an image is built.
@@ -233,7 +238,7 @@ Check what is running at any time:
 ```bash
 abox doctor        # reports guest VMs and their combined memory
 abox stop <name>   # halt one space, keep its files
-abox down          # stop everything agentspace started
+abox down          # stop everything agentpen started
 container system stop   # shut the runtime down entirely (Apple backend)
 ```
 
@@ -245,7 +250,7 @@ abox new quick --backend native
 
 ## Threat model
 
-agentspace defends against an agent that wanders — reading files it was not
+agentpen defends against an agent that wanders — reading files it was not
 pointed at, writing outside its project, poking at your local services. That is
 the realistic failure mode and the one it stops.
 

@@ -65,6 +65,8 @@ export async function cmdNew(args: Args): Promise<number> {
   }
 
   const env = collectEnv(args, cfg.forwardEnv, name)
+  // Scaffold the space but leave the environment down; `enter` starts it.
+  const noStart = args.bool('no-start')
 
   // Anything that fails from here on must leave the machine as it found it —
   // a half-created space is worse than no space, because `ls` will show it.
@@ -75,6 +77,17 @@ export async function cmdNew(args: Args): Promise<number> {
       date: new Date().toISOString().slice(0, 10),
     })
     log.ok(`seeded the ${stack} agent stack (${filesWritten} files)`)
+
+    if (noStart) {
+      writeControl(space, motd(space))
+      writeManifest(space)
+      log.ok('space ready — environment not started')
+      log.blank()
+      log.info(summary(space))
+      log.blank()
+      log.dim(`start it with: abox enter ${name}`)
+      return 0
+    }
 
     await backend.prepare(image, { rebuild: args.bool('rebuild') })
 

@@ -63,7 +63,8 @@ ${b('NEW OPTIONS')}
   --keep                 persistent space: 'leave' detaches instead of deleting
   --env KEY[=VALUE]      forward one host env var in ${d('(repeatable)')}
   --memory 4g --cpus 2   resource limits
-  --no-attach            create it but stay on the host
+  --no-attach            create it, start it, but stay on the host
+  --no-start             scaffold it without starting the environment
   --rebuild              rebuild the base image first
 
 ${b('INSIDE A SPACE')}

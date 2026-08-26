@@ -54,7 +54,7 @@ test('ls is empty before anything exists', () => {
 })
 
 test('new seeds the full agent stack', () => {
-  abox(['new', 'unit', '--backend', 'native', '--no-attach'])
+  abox(['new', 'unit', '--no-start'])
   const ws = workspace('unit')
 
   for (const file of [
@@ -103,27 +103,30 @@ test('scripts are executable inside the space', () => {
 test('the manifest records the isolation settings', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(spaceRoot('unit'), 'space.json'), 'utf8'))
   assert.equal(manifest.name, 'unit')
-  assert.equal(manifest.backend, 'native')
+  assert.ok(
+    ['apple', 'docker', 'native'].includes(manifest.backend),
+    `unexpected backend ${manifest.backend}`,
+  )
   assert.equal(manifest.ephemeral, true)
   assert.equal(manifest.stack, 'default')
 })
 
 test('ls and status report the new space', () => {
-  assert.match(abox(['ls']).stdout, /unit\s+.*native/)
+  assert.match(abox(['ls']).stdout, /unit\s+down/)
   const json = JSON.parse(abox(['ls', '--json']).stdout)
   assert.equal(json.length, 1)
   assert.match(abox(['status', 'unit']).stdout, /ephemeral/)
 })
 
 test('a duplicate name is refused rather than clobbering the workspace', () => {
-  const { code, stdout } = abox(['new', 'unit', '--no-attach'], { allowFailure: true })
+  const { code, stdout } = abox(['new', 'unit', '--no-start'], { allowFailure: true })
   assert.equal(code, 1)
   assert.match(stdout, /already exists/)
   assert.ok(fs.existsSync(path.join(workspace('unit'), 'AGENTS.md')))
 })
 
 test('--net rejects a value that is not a policy', () => {
-  const { code, stdout } = abox(['new', 'bad', '--net', 'sometimes', '--no-attach'], {
+  const { code, stdout } = abox(['new', 'bad', '--net', 'sometimes', '--no-start'], {
     allowFailure: true,
   })
   assert.equal(code, 1)
@@ -131,7 +134,7 @@ test('--net rejects a value that is not a policy', () => {
 })
 
 test('--keep marks the space persistent', () => {
-  abox(['new', 'kept', '--backend', 'native', '--keep', '--no-attach'])
+  abox(['new', 'kept', '--keep', '--no-start'])
   const manifest = JSON.parse(fs.readFileSync(path.join(spaceRoot('kept'), 'space.json'), 'utf8'))
   assert.equal(manifest.ephemeral, false)
   assert.match(abox(['leave', 'kept']).stdout, /files kept/)
@@ -156,8 +159,8 @@ test('rm deletes the workspace and everything in it', () => {
 })
 
 test('prune destroys ephemeral spaces and spares kept ones', () => {
-  abox(['new', 'temp-a', '--backend', 'native', '--no-attach'])
-  abox(['new', 'temp-b', '--backend', 'native', '--no-attach'])
+  abox(['new', 'temp-a', '--no-start'])
+  abox(['new', 'temp-b', '--no-start'])
   abox(['prune', '--force'])
   assert.equal(fs.existsSync(spaceRoot('temp-a')), false)
   assert.equal(fs.existsSync(spaceRoot('temp-b')), false)
@@ -173,7 +176,7 @@ test('backend selection rejects a runtime that does not exist', () => {
 test('an explicitly requested backend is never silently swapped', () => {
   // Docker is not running in CI on macOS, so asking for it must fail loudly
   // rather than quietly producing a weaker native space.
-  const { code, stdout } = abox(['new', 'pinned', '--backend', 'docker', '--no-attach'], {
+  const { code, stdout } = abox(['new', 'pinned', '--backend', 'docker', '--no-start'], {
     allowFailure: true,
   })
   if (code !== 0) {
@@ -187,7 +190,7 @@ test('an explicitly requested backend is never silently swapped', () => {
 })
 
 test('the minimal stack links only what it ships', () => {
-  abox(['new', 'small', '--backend', 'native', '--stack', 'minimal', '--no-attach'])
+  abox(['new', 'small', '--stack', 'minimal', '--no-start'])
   const claude = path.join(workspace('small'), '.claude')
   assert.ok(fs.existsSync(path.join(claude, 'skills')))
   for (const missing of ['agents', 'commands']) {
@@ -202,7 +205,7 @@ test('the minimal stack links only what it ships', () => {
 })
 
 test('an unknown stack is refused before anything is created', () => {
-  const { code, stdout } = abox(['new', 'nostack', '--stack', 'nope', '--no-attach'], {
+  const { code, stdout } = abox(['new', 'nostack', '--stack', 'nope', '--no-start'], {
     allowFailure: true,
   })
   assert.equal(code, 1)
@@ -211,13 +214,13 @@ test('an unknown stack is refused before anything is created', () => {
 })
 
 test('a one-character name is valid', () => {
-  abox(['new', 'x', '--backend', 'native', '--no-attach'])
+  abox(['new', 'x', '--no-start'])
   assert.ok(fs.existsSync(path.join(workspace('x'), 'AGENTS.md')))
   abox(['rm', 'x', '--force'])
 })
 
 test('stop keeps the files and is safe to repeat', () => {
-  abox(['new', 'halted', '--backend', 'native', '--keep', '--no-attach'])
+  abox(['new', 'halted', '--keep', '--no-start'])
   fs.writeFileSync(path.join(workspace('halted'), 'survives.txt'), 'still here')
   abox(['stop', 'halted'])
   abox(['stop', 'halted'])
@@ -237,6 +240,19 @@ test('the default memory ceiling is sized for a laptop', () => {
   // A container VM commits only what the guest touches, but the ceiling is
   // what a runaway process can reach — 4g per space was too much on 16GB.
   assert.equal(abox(['config', 'get', 'memory']).stdout.trim(), '2g')
+})
+
+// --no-start covers the scaffolding on every platform; this keeps one test
+// that actually boots an environment, where a daemonless one exists.
+test('a native space really starts, runs a command, and is destroyed', {
+  skip: process.platform !== 'darwin' ? 'native backend is macOS-only' : false,
+}, () => {
+  abox(['new', 'live', '--backend', 'native', '--no-attach'])
+  const out = abox(['exec', '--space', 'live', '--', 'echo inside && ls AGENTS.md']).stdout
+  assert.match(out, /inside/)
+  assert.match(out, /AGENTS\.md/)
+  abox(['rm', 'live', '--force'])
+  assert.equal(fs.existsSync(spaceRoot('live')), false)
 })
 
 test('doctor exits zero when a backend is available', () => {

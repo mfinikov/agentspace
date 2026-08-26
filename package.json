@@ -1,5 +1,5 @@
 {
-  "name": "agentspace",
+  "name": "agentsandbox",
   "version": "0.1.0",
   "description": "Ephemeral, sandboxed workspaces for AI agents. One folder in, nothing out, everything gone when you leave.",
   "keywords": [
@@ -7,6 +7,7 @@
     "agents",
     "ai",
     "sandbox",
+    "agent-sandbox",
     "container",
     "isolation",
     "ephemeral",
@@ -15,14 +16,13 @@
     "claude",
     "claude-code",
     "codex",
-    "devcontainer",
     "security"
   ],
   "license": "MIT",
   "type": "module",
   "bin": {
-    "aspace": "./dist/cli.js",
-    "agentspace": "./dist/cli.js"
+    "aspace": "dist/cli.js",
+    "agentsandbox": "dist/cli.js"
   },
   "files": [
     "dist",

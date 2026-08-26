@@ -1,7 +1,9 @@
-# agentspace
+# agentsandbox
 
 **A disposable machine for your agents.** One folder goes in. Nothing comes
 out. Everything is gone when you leave.
+
+> Installs as `agentsandbox`; the command is `aspace`.
 
 ```bash
 aspace new            # you are now inside a fresh, isolated environment
@@ -34,7 +36,7 @@ on your machine's network. Use `--net none` when that matters; see
 ## Install
 
 ```bash
-npm install -g agentspace
+npm install -g agentsandbox
 ```
 
 Requires **Node 20+**. A container runtime is optional — agentspace picks the

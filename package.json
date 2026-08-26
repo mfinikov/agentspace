@@ -1,5 +1,5 @@
 {
-  "name": "agentsandbox",
+  "name": "@mfinikov/agentsandbox",
   "version": "0.1.0",
   "description": "Ephemeral, sandboxed workspaces for AI agents. One folder in, nothing out, everything gone when you leave.",
   "keywords": [

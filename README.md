@@ -3,12 +3,12 @@
 **A disposable machine for your agents.** One folder goes in. Nothing comes
 out. Everything is gone when you leave.
 
-> Installs as `agentsandbox`; the command is `abox`.
+> Installs as `@mfinikov/agentsandbox`; the command is `abox`.
 
 ```bash
-abox new            # you are now inside a fresh, isolated environment
-claude                # or codex, or whatever you run — it lives in here
-abox leave          # the environment and everything in it is deleted
+abox new      # you are now inside a fresh, isolated environment
+claude        # or codex, or whatever you run — it lives in here
+abox leave    # the environment and everything in it is deleted
 ```
 
 Giving a coding agent your whole computer means giving it your SSH keys, your
@@ -36,7 +36,7 @@ on your machine's network. Use `--net none` when that matters; see
 ## Install
 
 ```bash
-npm install -g agentsandbox
+npm install -g @mfinikov/agentsandbox
 ```
 
 Requires **Node 20+**. A container runtime is optional — agentspace picks the

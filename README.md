@@ -1,9 +1,10 @@
-# agentsandbox
+# agentpen
 
 **A disposable machine for your agents.** One folder goes in. Nothing comes
 out. Everything is gone when you leave.
 
-> Installs as `@mfinikov/agentsandbox`; the command is `abox`.
+> A pen for your agents: they run inside it, and nothing gets out.
+> Installs as `agentpen`; the command is `abox`.
 
 ```bash
 abox new      # you are now inside a fresh, isolated environment
@@ -36,7 +37,7 @@ on your machine's network. Use `--net none` when that matters; see
 ## Install
 
 ```bash
-npm install -g @mfinikov/agentsandbox
+npm install -g agentpen
 ```
 
 Requires **Node 20+**. A container runtime is optional — agentspace picks the

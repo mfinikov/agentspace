@@ -1,5 +1,5 @@
 {
-  "name": "@mfinikov/agentsandbox",
+  "name": "agentpen",
   "version": "0.1.0",
   "description": "Ephemeral, sandboxed workspaces for AI agents. One folder in, nothing out, everything gone when you leave.",
   "keywords": [
@@ -22,7 +22,7 @@
   "type": "module",
   "bin": {
     "abox": "dist/cli.js",
-    "agentsandbox": "dist/cli.js"
+    "agentpen": "dist/cli.js"
   },
   "files": [
     "dist",
@@ -61,8 +61,5 @@
   "os": [
     "darwin",
     "linux"
-  ],
-  "publishConfig": {
-    "access": "public"
-  }
+  ]
 }
